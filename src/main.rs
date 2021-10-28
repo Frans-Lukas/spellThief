@@ -3,16 +3,17 @@ extern crate specs;
 
 use rltk::{GameState, RGB, Rltk};
 use specs::prelude::*;
-use specs::World;
 
 pub use components::*;
 pub use map::*;
 use player::*;
+pub use rect::Rect;
 use specs_derive::Component;
 
 mod components;
 mod map;
 mod player;
+mod rect;
 
 const WIDTH: usize = 80;
 const HEIGHT: usize = 50;
@@ -55,19 +56,20 @@ fn main() -> rltk::BError {
     gs.ecs.register::<LeftMover>();
     gs.ecs.register::<Player>();
 
+    let map =Map::new_map_rooms_and_corridors();
+    let (player_x, player_y) = map.rooms[0].center();
+    gs.ecs.insert(map);
+
     gs.ecs
-        .create_entity()
-        .with(Position { x: 40, y: 25 })
-        .with(Renderable {
-            glyph: rltk::to_cp437('@'),
-            fg: RGB::named(rltk::YELLOW),
-            bg: RGB::named(rltk::BLACK),
-        })
-        .with(Player {})
-        .build();
-
-    gs.ecs.insert(new_game_map());
-
+      .create_entity()
+      .with(Position { x: player_x, y: player_y })
+      .with(Renderable {
+          glyph: rltk::to_cp437('@'),
+          fg: RGB::named(rltk::YELLOW),
+          bg: RGB::named(rltk::BLACK),
+      })
+      .with(Player {})
+      .build();
     rltk::main_loop(context, gs)
 }
 
@@ -79,8 +81,7 @@ impl GameState for State {
         player_input(self, ctx, WORLD_SIZE);
 
         self.run_systems();
-        let map = self.ecs.fetch::<Vec<TileType>>();
-        draw_game_map(&map, ctx);
+        draw_game_map(&self.ecs, ctx);
 
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
