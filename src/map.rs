@@ -1,4 +1,5 @@
-use rltk::{Rltk, RGB};
+use rltk::{RGB, Rltk};
+
 use {crate::HEIGHT, crate::WIDTH};
 
 #[derive(PartialEq, Copy, Clone)]
@@ -8,7 +9,7 @@ pub enum TileType {
 }
 
 pub fn xy_idx(x: usize, y: usize) -> usize {
-    (y as usize * WIDTH) + x as usize
+    (y * WIDTH) + x
 }
 
 pub fn new_game_map() -> Vec<TileType> {
