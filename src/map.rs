@@ -1,9 +1,12 @@
-use super::Rect;
-use rltk::{RandomNumberGenerator, Rltk, RGB};
-use specs::prelude::*;
 use std::cmp::{max, min};
 
+use rltk::{Algorithm2D, BaseMap, Point, RandomNumberGenerator, RGB, Rltk};
+use specs::prelude::*;
+
 use {crate::HEIGHT, crate::WIDTH};
+
+use super::{Player, Position, Viewshed};
+use super::Rect;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum TileType {
@@ -11,12 +14,59 @@ pub enum TileType {
     Floor,
 }
 
+impl Algorithm2D for Map {
+    fn dimensions(&self) -> Point {
+        Point::new(self.width, self.height)
+    }
+}
+
+impl BaseMap for Map {
+    fn is_opaque(&self, idx: usize) -> bool {
+        self.tiles[idx as usize] == TileType::Wall
+    }
+}
+
 pub struct Map {
     pub tiles: Vec<TileType>,
     pub rooms: Vec<Rect>,
+    pub revealed_tiles: Vec<bool>,
+    pub visible_tiles: Vec<bool>,
     pub width: i32,
     pub height: i32,
 }
+
+pub fn draw_map(ecs: &World, ctx: &mut Rltk) {
+    let map = ecs.fetch::<Map>();
+
+    let mut x = 0;
+    let mut y = 0;
+    for (idx, tile) in map.tiles.iter().enumerate() {
+        if map.revealed_tiles[idx] {
+
+            let glyph;
+            let mut fg;
+            match tile {
+                TileType::Floor => {
+                    glyph = rltk::to_cp437('.');
+                    fg = RGB::from_f32(0.5, 0.5, 0.5);
+                }
+                TileType::Wall => {
+                    glyph = rltk::to_cp437('#');
+                    fg = RGB::from_u8(87, 134, 112);
+                }
+            }
+            if !map.visible_tiles[idx] { fg = fg.to_greyscale() }
+            ctx.set(x, y, fg, RGB::from_f32(0.,0.,0.), glyph);
+        }
+
+        x += 1;
+        if x > 79 {
+            x = 0;
+            y += 1;
+        }
+    }
+}
+
 impl Map {
     pub fn xy_idx(&self, x: usize, y: usize) -> usize {
         (y * WIDTH) + x
@@ -56,12 +106,7 @@ impl Map {
     /// Makes a new map using the algorithm from http://rogueliketutorials.com/tutorials/tcod/part-3/
     /// This gives a handful of random rooms and corridors joining them together.
     pub fn new_map_rooms_and_corridors() -> Map {
-        let mut map = Map {
-            tiles: vec![TileType::Wall; 80 * 50],
-            rooms: Vec::new(),
-            width: 80,
-            height: 50,
-        };
+        let mut map = Map::new_empty_map();
 
         const MAX_ROOMS: i32 = 30;
         const MIN_SIZE: i32 = 6;
@@ -103,13 +148,19 @@ impl Map {
         map
     }
 
-    pub fn new_rand_map(&mut self) -> Map {
-        let mut map = Map {
-            tiles: vec![TileType::Wall; HEIGHT * WIDTH],
+    fn new_empty_map() -> Map {
+        Map {
+            tiles: vec![TileType::Wall; 80 * 50],
             rooms: Vec::new(),
-            width: WIDTH as i32,
-            height: HEIGHT as i32,
-        };
+            revealed_tiles: vec![false; HEIGHT * WIDTH],
+            visible_tiles: vec![false; HEIGHT * WIDTH],
+            width: 80,
+            height: 50,
+        }
+    }
+
+    pub fn new_rand_map(&mut self) -> Map {
+        let mut map = Map::new_empty_map();
         for x in 0..WIDTH {
             map.tiles[self.xy_idx(x, 0)] = TileType::Wall;
             map.tiles[self.xy_idx(x, HEIGHT - 1)] = TileType::Wall;
@@ -130,39 +181,5 @@ impl Map {
         }
 
         map
-    }
-}
-pub fn draw_game_map(ecs: &World, ctx: &mut Rltk) {
-    let mut x = 0;
-    let mut y = 0;
-    let map = ecs.fetch::<Map>();
-
-    for tile in map.tiles.iter() {
-        match tile {
-            TileType::Floor => {
-                ctx.set(
-                    x,
-                    y,
-                    RGB::from_f32(0.5, 0.5, 0.5),
-                    RGB::from_f32(0., 0., 0.),
-                    rltk::to_cp437('.'),
-                );
-            }
-            TileType::Wall => {
-                ctx.set(
-                    x,
-                    y,
-                    RGB::from_u8(87, 134, 112),
-                    RGB::from_f32(0., 0., 0.),
-                    rltk::to_cp437('#'),
-                );
-            }
-        }
-
-        x += 1;
-        if x > 79 {
-            x = 0;
-            y += 1;
-        }
     }
 }
