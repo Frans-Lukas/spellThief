@@ -1,10 +1,10 @@
 use std::cmp::{max, min};
 
-use rltk::{console, Point, Rltk, VirtualKeyCode};
+use rltk::{Point, Rltk, VirtualKeyCode};
 use specs::prelude::*;
 
 use super::{
-    CombatStats, Map, Player, Position, RunState, State, TileType, Viewshed, WantsToMelee,
+    CombatStats, Map, Player, Position, RunState, State, Viewshed, WantsToMelee,
 };
 
 pub(crate) fn player_input(gs: &mut State, ctx: &mut Rltk, world_size: Position) -> RunState {

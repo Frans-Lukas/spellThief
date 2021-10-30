@@ -130,7 +130,6 @@ impl Map {
                 count += 1;
             }
         }
-        console::log(format!("count: {}", count))
     }
 
     fn apply_room_to_map(&mut self, room: &Rect) {

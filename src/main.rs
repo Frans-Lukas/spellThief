@@ -13,6 +13,7 @@ use monster_ai_systems::MonsterAI;
 use player::*;
 pub use rect::Rect;
 pub use visibility_system::*;
+use gamelog::GameLog;
 
 mod components;
 mod damage_system;
@@ -24,6 +25,7 @@ mod monster_ai_systems;
 mod player;
 mod rect;
 mod visibility_system;
+mod gamelog;
 
 const WINDOW_WIDTH: usize = 80;
 const WINDOW_HEIGHT: usize = 50;
@@ -51,9 +53,11 @@ pub enum RunState {
 
 fn main() -> rltk::BError {
     use rltk::RltkBuilder;
-    let context = RltkBuilder::simple80x50()
+    let mut context = RltkBuilder::simple80x50()
         .with_title("Roguelike Tutorial")
         .build()?;
+
+    context.with_post_scanlines(true);
 
     let mut gs = State { ecs: World::new() };
     gs.ecs.register::<Position>();
@@ -152,6 +156,8 @@ fn main() -> rltk::BError {
     gs.ecs.insert(map);
     gs.ecs.insert(RunState::PreRun);
     gs.ecs.insert(player_entity);
+    gs.ecs.insert(rltk::RandomNumberGenerator::new());
+    gs.ecs.insert(GameLog{entries: vec!["Welcome to Spell Thief!".to_string()]});
     rltk::main_loop(context, gs)
 }
 

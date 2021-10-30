@@ -1,21 +1,25 @@
 use specs::prelude::*;
-use super::{CombatStats, WantsToMelee, Name, SufferDamage};
-use rltk::console;
+
+use super::{CombatStats, GameLog, Name, SufferDamage, WantsToMelee};
 
 pub struct MeleeCombatSystem {}
 
 impl<'a> System<'a> for MeleeCombatSystem {
-    type SystemData = ( Entities<'a>,
-                        WriteStorage<'a, WantsToMelee>,
-                        ReadStorage<'a, Name>,
-                        ReadStorage<'a, CombatStats>,
-                        WriteStorage<'a, SufferDamage>
+    type SystemData = (
+        Entities<'a>,
+        WriteStorage<'a, WantsToMelee>,
+        WriteExpect<'a, GameLog>,
+        ReadStorage<'a, Name>,
+        ReadStorage<'a, CombatStats>,
+        WriteStorage<'a, SufferDamage>,
     );
 
-    fn run(&mut self, data : Self::SystemData) {
-        let (entities, mut wants_melee, names, combat_stats, mut inflict_damage) = data;
+    fn run(&mut self, data: Self::SystemData) {
+        let (entities, mut wants_melee, mut logs, names, combat_stats, mut inflict_damage) = data;
 
-        for (_entity, wants_melee, name, stats) in (&entities, &wants_melee, &names, &combat_stats).join() {
+        for (_entity, wants_melee, name, stats) in
+            (&entities, &wants_melee, &names, &combat_stats).join()
+        {
             if stats.hp > 0 {
                 let target_stats = combat_stats.get(wants_melee.target).unwrap();
                 if target_stats.hp > 0 {
@@ -24,9 +28,15 @@ impl<'a> System<'a> for MeleeCombatSystem {
                     let damage = i32::max(0, stats.power - target_stats.defense);
 
                     if damage == 0 {
-                        console::log(&format!("{} is unable to hurt {}", &name.name, &target_name.name));
+                        logs.entries.push(format!(
+                            "{} is unable to hurt {}",
+                            &name.name, &target_name.name
+                        ));
                     } else {
-                        console::log(&format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
+                        logs.entries.push(format!(
+                            "{} hits {}, for {} hp.",
+                            &name.name, &target_name.name, damage
+                        ));
                         SufferDamage::new_damage(&mut inflict_damage, wants_melee.target, damage);
                     }
                 }
