@@ -16,6 +16,7 @@ pub use visibility_system::*;
 
 mod components;
 mod damage_system;
+mod gui;
 mod map;
 mod map_indexing_system;
 mod melee_combat_system;
@@ -24,8 +25,13 @@ mod player;
 mod rect;
 mod visibility_system;
 
-const WIDTH: usize = 80;
-const HEIGHT: usize = 50;
+const WINDOW_WIDTH: usize = 80;
+const WINDOW_HEIGHT: usize = 50;
+const R_GUI_SIZE: usize = 14;
+const B_GUI_SIZE: usize = 7;
+const WIDTH: usize = WINDOW_WIDTH - R_GUI_SIZE;
+const HEIGHT: usize = WINDOW_HEIGHT - B_GUI_SIZE;
+
 const WORLD_SIZE: Position = Position {
     x: WIDTH as i32,
     y: HEIGHT as i32,
@@ -58,6 +64,7 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Name>();
     gs.ecs.register::<BlocksTile>();
     gs.ecs.register::<CombatStats>();
+    gs.ecs.register::<MagicStats>();
     gs.ecs.register::<SufferDamage>();
     gs.ecs.register::<WantsToMelee>();
 
@@ -90,6 +97,10 @@ fn main() -> rltk::BError {
             hp: 30,
             defense: 2,
             power: 5,
+        })
+        .with(MagicStats {
+            max_mana: 10,
+            mana: 10,
         })
         .build();
 
@@ -190,6 +201,8 @@ impl GameState for State {
                 ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph)
             }
         }
+
+        gui::draw_ui(&self.ecs, ctx);
     }
 }
 

@@ -44,6 +44,12 @@ pub struct CombatStats {
     pub power: i32,
 }
 
+#[derive(Component, Debug)]
+pub struct MagicStats {
+    pub max_mana: i32,
+    pub mana: i32,
+}
+
 #[derive(Component, Debug, Clone)]
 pub struct WantsToMelee {
     pub target: Entity,

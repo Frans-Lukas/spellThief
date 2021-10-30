@@ -1,6 +1,6 @@
 use std::cmp::{max, min};
 
-use rltk::{console, Algorithm2D, BaseMap, Point, RandomNumberGenerator, Rltk, RGB};
+use rltk::{Algorithm2D, BaseMap, console, Point, RandomNumberGenerator, RGB, Rltk};
 use specs::prelude::*;
 
 use {crate::HEIGHT, crate::WIDTH};
@@ -106,7 +106,7 @@ pub fn draw_map(ecs: &World, ctx: &mut Rltk) {
         }
 
         x += 1;
-        if x > 79 {
+        if x > WIDTH - 1 {
             x = 0;
             y += 1;
         }
@@ -221,14 +221,14 @@ impl Map {
 
     fn new_empty_map() -> Map {
         Map {
-            tiles: vec![TileType::Wall; 80 * 50],
+            tiles: vec![TileType::Wall; HEIGHT * WIDTH],
             rooms: Vec::new(),
             revealed_tiles: vec![false; HEIGHT * WIDTH],
             visible_tiles: vec![false; HEIGHT * WIDTH],
             blocked: vec![false; HEIGHT * WIDTH],
-            tile_content: vec![Vec::new(); 80 * 50],
-            width: 80,
-            height: 50,
+            tile_content: vec![Vec::new(); HEIGHT * WIDTH],
+            width: WIDTH as i32,
+            height: HEIGHT as i32,
         }
     }
 
