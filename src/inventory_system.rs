@@ -1,10 +1,9 @@
-use rltk::Point;
 use specs::prelude::*;
 
 use super::{
     gamelog::GameLog, helpers::points_in_circle, AreaOfEffect, CombatStats, Confusion, Consumable,
-    DestroysWalls, InBackpack, InflictsDamage, Item, Map, Name, Position, Potion, ProvidesHealing,
-    SufferDamage, TileType, WantsToDropItem, WantsToPickupItem, WantsToUseItem,
+    DestroysWalls, InBackpack, InflictsDamage, Map, Name, Position,
+    ProvidesHealing, SufferDamage, TileType, WantsToDropItem, WantsToPickupItem, WantsToUseItem,
 };
 
 pub struct ItemCollectionSystem {}
@@ -83,7 +82,7 @@ impl<'a> System<'a> for ItemUseSystem {
             mut suffer_damage,
             aoe,
             mut confused,
-            destroys_walls,
+            destroys_walls
         ) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
@@ -254,7 +253,7 @@ impl<'a> System<'a> for ItemDropSystem {
             entities,
             mut in_backpack,
             mut wants_to_drop,
-            mut positions,
+            positions,
             names,
         ) = data;
 
@@ -265,13 +264,6 @@ impl<'a> System<'a> for ItemDropSystem {
                 to_drop_pos.x = entity_pos.x;
                 to_drop_pos.y = entity_pos.y;
             }
-            positions.insert(
-                wtd.item,
-                Position {
-                    x: to_drop_pos.x,
-                    y: to_drop_pos.y,
-                },
-            );
             in_backpack.remove(wtd.item);
             if entity == *player_entity {
                 gamelog.entries.push(format!(

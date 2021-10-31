@@ -3,10 +3,10 @@ use specs::prelude::*;
 
 use super::{
     random_table::RandomTable, AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable,
-    InflictsDamage, Item, MagicStats, Map, Monster, Name, Player, Position, Potion,
+    InflictsDamage, Item, MagicStats, Monster, Name, Player, Position,
     ProvidesHealing, Ranged, Rect, Renderable, Viewshed, DestroysWalls
 };
-use super::{HEIGHT, MAX_MONSTERS, WIDTH};
+use super::{MAX_MONSTERS, WIDTH};
 use std::collections::HashMap;
 
 /// Spawns the player and returns his/her entity object.
@@ -204,7 +204,7 @@ fn room_table(depth: i32) -> RandomTable {
         .add("Goblin", 10)
         .add("Orc", 1 + depth)
         .add("Health Potion", 7)
-        .add("Fireball Scroll", 100 + depth)
+        .add("Fireball Scroll", 2 + depth)
         .add("Confusion Scroll", 2 + depth)
         .add("Magic Missile Scroll", 4)
 }

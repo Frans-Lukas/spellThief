@@ -1,5 +1,5 @@
 use super::{Map, Monster, Position, RunState, Viewshed, WantsToMelee, Confusion};
-use rltk::{console, Point};
+use rltk::{Point};
 use specs::prelude::*;
 
 pub struct MonsterAI {}

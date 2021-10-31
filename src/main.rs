@@ -1,7 +1,7 @@
 extern crate rltk;
 extern crate specs;
 
-use rltk::{GameState, Point, RandomNumberGenerator, Rltk, RGB};
+use rltk::{GameState, Point, Rltk};
 use specs::prelude::*;
 
 pub use components::*;
@@ -45,7 +45,6 @@ const WORLD_SIZE: Position = Position {
 };
 
 const MAX_MONSTERS: i32 = 4;
-const MAX_ITEMS: i32 = 2;
 
 pub struct State {
     pub ecs: World,
@@ -72,7 +71,7 @@ fn main() -> rltk::BError {
     context.with_post_scanlines(true);
 
     let mut gs = State { ecs: World::new() };
-    registerComponents(&mut gs);
+    register_components(&mut gs);
 
     let map = Map::new_map_rooms_and_corridors(1);
     let (player_x, player_y) = map.rooms[0].center();
@@ -342,7 +341,7 @@ impl State {
     }
 }
 
-fn registerComponents(gs: &mut State) {
+fn register_components(gs: &mut State) {
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<Player>();

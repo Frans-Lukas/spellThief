@@ -1,6 +1,6 @@
 use std::cmp::max;
 
-use rltk::{BresenhamCircle, console, field_of_view, Point, RGB, Rltk, VirtualKeyCode};
+use rltk::{Point, RGB, Rltk, VirtualKeyCode};
 use specs::{Entity, Join, World, WorldExt};
 
 use crate::helpers::points_in_circle;
@@ -65,39 +65,6 @@ fn draw_right_border(ctx: &mut Rltk) {
         RGB::named(rltk::WHEAT),
         RGB::named(rltk::BLACK),
     )
-}
-
-fn draw_healthbar(ecs: &World, ctx: &mut Rltk) {
-    let combat_stats = ecs.read_storage::<CombatStats>();
-    let players = ecs.read_storage::<Player>();
-
-    for (_player, stats) in (&players, &combat_stats).join() {
-        let health = format!("{:02}/{:02}", stats.hp, stats.max_hp);
-
-        let mut color = RGB::named(rltk::GREEN1);
-        if stats.hp < stats.max_hp / 3 {
-            color = RGB::named(rltk::RED1);
-        } else if stats.hp < stats.max_hp - stats.max_hp / 3 {
-            color = RGB::named(rltk::YELLOW1);
-        }
-
-        ctx.print_color(
-            WIDTH / 2 + WIDTH / 3 + 2,
-            43,
-            color,
-            RGB::named(rltk::BLACK),
-            &health,
-        );
-        ctx.draw_bar_horizontal(
-            WIDTH,
-            HEIGHT,
-            WIDTH / 5,
-            stats.hp,
-            stats.max_hp,
-            color,
-            RGB::named(rltk::BLACK),
-        );
-    }
 }
 
 fn draw_player_stats(ecs: &World, ctx: &mut Rltk) {

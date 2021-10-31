@@ -1,6 +1,6 @@
 use std::cmp::{max, min};
 
-use rltk::{Algorithm2D, BaseMap, console, Point, RandomNumberGenerator, RGB, Rltk};
+use rltk::{Algorithm2D, BaseMap, Point, RandomNumberGenerator, RGB, Rltk};
 use specs::prelude::*;
 
 use {crate::HEIGHT, crate::WIDTH};
@@ -138,12 +138,8 @@ impl Map {
     }
 
     pub fn populate_blocked(&mut self) {
-        let mut count = 0;
         for (i, tile) in self.tiles.iter_mut().enumerate() {
             self.blocked[i] = *tile == TileType::Wall;
-            if self.blocked[i] {
-                count += 1;
-            }
         }
     }
 
