@@ -1,10 +1,10 @@
+use rltk::Point;
 use specs::prelude::*;
 
-
 use super::{
-    gamelog::GameLog, AreaOfEffect, CombatStats, Confusion, InBackpack, InflictsDamage, Item, Map,
-    Name, Position, Potion, ProvidesHealing, SufferDamage, WantsToDropItem, WantsToPickupItem,
-    WantsToUseItem, Consumable
+    gamelog::GameLog, helpers::points_in_circle, AreaOfEffect, CombatStats, Confusion, Consumable,
+    DestroysWalls, InBackpack, InflictsDamage, Item, Map, Name, Position, Potion, ProvidesHealing,
+    SufferDamage, TileType, WantsToDropItem, WantsToPickupItem, WantsToUseItem,
 };
 
 pub struct ItemCollectionSystem {}
@@ -54,7 +54,7 @@ impl<'a> System<'a> for ItemUseSystem {
     type SystemData = (
         ReadExpect<'a, Entity>,
         WriteExpect<'a, GameLog>,
-        ReadExpect<'a, Map>,
+        WriteExpect<'a, Map>,
         Entities<'a>,
         WriteStorage<'a, WantsToUseItem>,
         ReadStorage<'a, Name>,
@@ -65,13 +65,14 @@ impl<'a> System<'a> for ItemUseSystem {
         WriteStorage<'a, SufferDamage>,
         ReadStorage<'a, AreaOfEffect>,
         WriteStorage<'a, Confusion>,
+        ReadStorage<'a, DestroysWalls>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
         let (
             player_entity,
             mut gamelog,
-            map,
+            mut map,
             entities,
             mut wants_use,
             names,
@@ -82,13 +83,15 @@ impl<'a> System<'a> for ItemUseSystem {
             mut suffer_damage,
             aoe,
             mut confused,
+            destroys_walls,
         ) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
-            let mut used_item = true;
+            let mut used_item = false;
 
             // Targeting
             let mut targets: Vec<Entity> = Vec::new();
+            let mut blast_tiles = Vec::new();
             match useitem.target {
                 None => {
                     targets.push(*player_entity);
@@ -105,8 +108,13 @@ impl<'a> System<'a> for ItemUseSystem {
                         }
                         Some(area_effect) => {
                             // AoE
-                            let mut blast_tiles =
-                                rltk::field_of_view(target, area_effect.radius, &*map);
+                            {
+                                let target_points = points_in_circle(target, area_effect.radius);
+                                for point in target_points.iter() {
+                                    blast_tiles.push(*point);
+                                }
+                            }
+                            //rltk::field_of_view(target, area_effect.radius, &*map);
                             blast_tiles.retain(|p| {
                                 p.x > 0 && p.x < map.width - 1 && p.y > 0 && p.y < map.height - 1
                             });
@@ -121,12 +129,29 @@ impl<'a> System<'a> for ItemUseSystem {
                 }
             }
 
+            let destroys_wall = destroys_walls.get(useitem.item);
+            match destroys_wall {
+                None => {}
+                Some(_) => {
+                    for destruction_point in blast_tiles.iter() {
+                        let idx = map.xy_idxi32(destruction_point.x, destruction_point.y);
+                        match map.tiles[idx] {
+                            TileType::Wall => {
+                                map.tiles[idx] = TileType::Floor;
+                                used_item = true;
+                            }
+                            TileType::Floor => {}
+                            TileType::DownStairs => {}
+                        }
+                    }
+                }
+            }
+
             // If it heals, apply the healing
             let item_heals = healing.get(useitem.item);
             match item_heals {
                 None => {}
                 Some(healer) => {
-                    used_item = false;
                     for target in targets.iter() {
                         let stats = combat_stats.get_mut(*target);
                         if let Some(stats) = stats {
@@ -149,7 +174,6 @@ impl<'a> System<'a> for ItemUseSystem {
             match item_damages {
                 None => {}
                 Some(damage) => {
-                    used_item = false;
                     for mob in targets.iter() {
                         SufferDamage::new_damage(&mut suffer_damage, *mob, damage.damage);
                         if entity == *player_entity {

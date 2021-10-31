@@ -92,6 +92,12 @@ pub struct AreaOfEffect {
 }
 
 #[derive(Component, Debug)]
+pub struct CanTargetAnything {}
+
+#[derive(Component, Debug)]
+pub struct DestroysWalls {}
+
+#[derive(Component, Debug)]
 pub struct Confusion {
     pub duration: i32,
 }

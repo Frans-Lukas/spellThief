@@ -1,7 +1,9 @@
 use std::cmp::max;
 
-use rltk::{Point, RGB, Rltk, VirtualKeyCode};
+use rltk::{BresenhamCircle, console, field_of_view, Point, RGB, Rltk, VirtualKeyCode};
 use specs::{Entity, Join, World, WorldExt};
+
+use crate::helpers::points_in_circle;
 
 use super::{CombatStats, InBackpack, MagicStats, Map, Player, Position, State, Viewshed};
 use super::{B_GUI_SIZE, GameLog, HEIGHT, Name, R_GUI_SIZE, WIDTH, WINDOW_WIDTH};
@@ -438,6 +440,7 @@ pub fn ranged_target(
     gs: &mut State,
     ctx: &mut Rltk,
     range: i32,
+    radius: i32,
 ) -> (ItemMenuResult, Option<Point>) {
     let player_entity = gs.ecs.fetch::<Entity>();
     let player_pos = gs.ecs.fetch::<Point>();
@@ -470,11 +473,18 @@ pub fn ranged_target(
     // Draw mouse cursor
     let mouse_pos = ctx.mouse_pos();
     let mut valid_target = false;
+
+    let mut aoe_targets: Vec<Point> = Vec::new();
     for idx in available_cells.iter() {
         if idx.x == mouse_pos.0 && idx.y == mouse_pos.1 {
+            aoe_targets = points_in_circle(**idx, radius);
             valid_target = true;
         }
     }
+    for idx in aoe_targets.iter() {
+        ctx.set_bg(idx.x, idx.y, RGB::named(rltk::DARK_BLUE));
+    }
+
     if valid_target {
         ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::CYAN));
         if ctx.left_click {

@@ -2,12 +2,12 @@ use rltk::{RandomNumberGenerator, RGB};
 use specs::prelude::*;
 
 use super::{
-    AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, InflictsDamage, Item, MagicStats,
-    Map, Monster, Name, Player, Position, Potion, ProvidesHealing, Ranged, Rect, Renderable,
-    Viewshed, random_table::RandomTable
+    random_table::RandomTable, AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable,
+    InflictsDamage, Item, MagicStats, Map, Monster, Name, Player, Position, Potion,
+    ProvidesHealing, Ranged, Rect, Renderable, Viewshed, DestroysWalls
 };
+use super::{HEIGHT, MAX_MONSTERS, WIDTH};
 use std::collections::HashMap;
-use super::{MAX_MONSTERS, WIDTH, HEIGHT};
 
 /// Spawns the player and returns his/her entity object.
 pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
@@ -46,14 +46,14 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
 
 pub fn spawn_room(ecs: &mut World, room: &Rect, map_depth: i32) {
     let spawn_table = room_table(map_depth);
-    let mut spawn_points : HashMap<usize, String> = HashMap::new();
+    let mut spawn_points: HashMap<usize, String> = HashMap::new();
 
     // Scope to keep the borrow checker happy
     {
         let mut rng = ecs.write_resource::<RandomNumberGenerator>();
         let num_spawns = rng.roll_dice(1, MAX_MONSTERS + 3) + (map_depth - 1) - 3;
 
-        for _i in 0 .. num_spawns {
+        for _i in 0..num_spawns {
             let mut added = false;
             let mut tries = 0;
             while !added && tries < 20 {
@@ -93,7 +93,6 @@ fn orc(ecs: &mut World, x: i32, y: i32) {
 fn goblin(ecs: &mut World, x: i32, y: i32) {
     monster(ecs, x, y, rltk::to_cp437('g'), "Goblin");
 }
-
 
 fn monster<S: ToString>(ecs: &mut World, x: i32, y: i32, glyph: rltk::FontCharType, name: S) {
     ecs.create_entity()
@@ -158,6 +157,7 @@ fn fireball_scroll(ecs: &mut World, x: i32, y: i32) {
         .with(Ranged { range: 6 })
         .with(InflictsDamage { damage: 20 })
         .with(AreaOfEffect { radius: 3 })
+        .with(DestroysWalls {})
         .build();
 }
 
@@ -204,7 +204,7 @@ fn room_table(depth: i32) -> RandomTable {
         .add("Goblin", 10)
         .add("Orc", 1 + depth)
         .add("Health Potion", 7)
-        .add("Fireball Scroll", 2 + depth)
+        .add("Fireball Scroll", 100 + depth)
         .add("Confusion Scroll", 2 + depth)
         .add("Magic Missile Scroll", 4)
 }

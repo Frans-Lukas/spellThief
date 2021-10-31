@@ -20,6 +20,7 @@ mod components;
 mod damage_system;
 mod gamelog;
 mod gui;
+mod helpers;
 mod inventory_system;
 mod map;
 mod map_indexing_system;
@@ -195,7 +196,18 @@ impl GameState for State {
                 }
             }
             RunState::ShowTargeting { range, item } => {
-                let result = gui::ranged_target(self, ctx, range);
+                let mut radius = 1;
+
+
+                {
+                    let aoe = self.ecs.read_storage::<AreaOfEffect>();
+                    let is_aoe = aoe.get(item);
+                    //if let Some(is_item_ranged) = is_item_ranged {
+                    if let Some(is_aoe) = is_aoe {
+                        radius = is_aoe.radius;
+                    }
+                }
+                let result = gui::ranged_target(self, ctx, range, radius);
                 match result.0 {
                     gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
                     gui::ItemMenuResult::NoResponse => {}
@@ -355,4 +367,6 @@ fn registerComponents(gs: &mut State) {
     gs.ecs.register::<WantsToUseItem>();
     gs.ecs.register::<Confusion>();
     gs.ecs.register::<AreaOfEffect>();
+    gs.ecs.register::<CanTargetAnything>();
+    gs.ecs.register::<DestroysWalls>();
 }
