@@ -1,9 +1,9 @@
 use std::cmp::{max, min};
 
-use rltk::{Algorithm2D, BaseMap, console, Point, RandomNumberGenerator, RGB, Rltk};
+use rltk::{console, Algorithm2D, BaseMap, Point, RandomNumberGenerator, Rltk, RGB};
 use specs::prelude::*;
 
-use {crate::HEIGHT, crate::WIDTH};
+use {crate::HEIGHT, crate::WIDTH, };
 
 use super::Rect;
 
@@ -112,10 +112,18 @@ pub fn draw_map(ecs: &World, ctx: &mut Rltk) {
         }
     }
 }
-
 impl Map {
-    pub fn xy_idx(&self, x: usize, y: usize) -> usize {
+    pub fn idx_to_xy(idx: usize) -> (usize, usize) {
+        let x = idx % WIDTH;
+        let y = idx / WIDTH;
+        (x, y)
+    }
+    pub fn xy_idx_impl(x: usize, y: usize) -> usize {
         (y * WIDTH) + x
+    }
+
+    pub fn xy_idx(&self, x: usize, y: usize) -> usize {
+        Map::xy_idx_impl(x, y)
     }
 
     pub fn xy_idxi32(&self, x: i32, y: i32) -> usize {
