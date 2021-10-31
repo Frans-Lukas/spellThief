@@ -26,6 +26,7 @@ mod map_indexing_system;
 mod melee_combat_system;
 mod monster_ai_systems;
 mod player;
+mod random_table;
 mod rect;
 mod spawner;
 mod visibility_system;
@@ -79,7 +80,7 @@ fn main() -> rltk::BError {
 
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     for room in map.rooms.iter().skip(1) {
-        spawner::spawn_room(&mut gs.ecs, room);
+        spawner::spawn_room(&mut gs.ecs, room, map.depth);
     }
     gs.ecs.insert(Point::new(player_x, player_y));
     gs.ecs.insert(map);
@@ -244,7 +245,7 @@ impl State {
 
         // Spawn bad guys
         for room in worldmap.rooms.iter().skip(1) {
-            spawner::spawn_room(&mut self.ecs, room);
+            spawner::spawn_room(&mut self.ecs, room, worldmap.depth);
         }
 
         // Place the player and update resources
