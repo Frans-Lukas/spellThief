@@ -1,9 +1,9 @@
 use std::cmp::{max, min};
 
-use rltk::{console, Algorithm2D, BaseMap, Point, RandomNumberGenerator, Rltk, RGB};
+use rltk::{Algorithm2D, BaseMap, console, Point, RandomNumberGenerator, RGB, Rltk};
 use specs::prelude::*;
 
-use {crate::HEIGHT, crate::WIDTH, };
+use {crate::HEIGHT, crate::WIDTH};
 
 use super::Rect;
 
@@ -11,8 +11,10 @@ use super::Rect;
 pub enum TileType {
     Wall,
     Floor,
+    DownStairs,
 }
 
+#[derive(Default, Clone)]
 pub struct Map {
     pub tiles: Vec<TileType>,
     pub rooms: Vec<Rect>,
@@ -22,6 +24,7 @@ pub struct Map {
     pub tile_content: Vec<Vec<Entity>>,
     pub width: i32,
     pub height: i32,
+    pub depth: i32,
 }
 
 impl Algorithm2D for Map {
@@ -97,6 +100,10 @@ pub fn draw_map(ecs: &World, ctx: &mut Rltk) {
                 TileType::Wall => {
                     glyph = rltk::to_cp437('#');
                     fg = RGB::from_u8(87, 134, 112);
+                }
+                TileType::DownStairs => {
+                    glyph = rltk::to_cp437('>');
+                    fg = RGB::from_f32(0., 1.0, 1.0);
                 }
             }
             if !map.visible_tiles[idx] {
@@ -177,8 +184,8 @@ impl Map {
 
     /// Makes a new map using the algorithm from http://rogueliketutorials.com/tutorials/tcod/part-3/
     /// This gives a handful of random rooms and corridors joining them together.
-    pub fn new_map_rooms_and_corridors() -> Map {
-        let mut map = Map::new_empty_map();
+    pub fn new_map_rooms_and_corridors(depth: i32) -> Map {
+        let mut map = Map::new_empty_map(depth);
 
         const MAX_ROOMS: i32 = 30;
         const MIN_SIZE: i32 = 6;
@@ -217,6 +224,10 @@ impl Map {
             }
         }
 
+        let stairs_position = map.rooms[map.rooms.len() - 1].center();
+        let stairs_idx = map.xy_idxi32(stairs_position.0, stairs_position.1);
+        map.tiles[stairs_idx] = TileType::DownStairs;
+
         map
     }
 
@@ -226,7 +237,7 @@ impl Map {
         }
     }
 
-    fn new_empty_map() -> Map {
+    fn new_empty_map(depth: i32) -> Map {
         Map {
             tiles: vec![TileType::Wall; HEIGHT * WIDTH],
             rooms: Vec::new(),
@@ -236,11 +247,12 @@ impl Map {
             tile_content: vec![Vec::new(); HEIGHT * WIDTH],
             width: WIDTH as i32,
             height: HEIGHT as i32,
+            depth,
         }
     }
 
-    pub fn new_rand_map(&mut self) -> Map {
-        let mut map = Map::new_empty_map();
+    pub fn new_rand_map(&mut self, depth: i32) -> Map {
+        let mut map = Map::new_empty_map(depth);
         for x in 0..WIDTH {
             map.tiles[self.xy_idx(x, 0)] = TileType::Wall;
             map.tiles[self.xy_idx(x, HEIGHT - 1)] = TileType::Wall;

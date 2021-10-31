@@ -4,8 +4,8 @@ use rltk::{Point, Rltk, VirtualKeyCode};
 use specs::prelude::*;
 
 use super::{
-    CombatStats, GameLog, Item, Map, Player, Position, RunState, State, Viewshed, WantsToMelee,
-    WantsToPickupItem,
+    CombatStats, GameLog, Item, Map, Player, Position, RunState, State, TileType, Viewshed,
+    WantsToMelee, WantsToPickupItem,
 };
 
 pub(crate) fn player_input(gs: &mut State, ctx: &mut Rltk, world_size: Position) -> RunState {
@@ -47,13 +47,35 @@ pub(crate) fn player_input(gs: &mut State, ctx: &mut Rltk, world_size: Position)
             }
 
             VirtualKeyCode::G => get_item(&mut gs.ecs),
-            VirtualKeyCode::Space => try_move_player(0, 0, &mut gs.ecs, world_size),
+            VirtualKeyCode::Numpad5 => return RunState::PlayerTurn,
+            VirtualKeyCode::Space => return RunState::PlayerTurn,
             VirtualKeyCode::I => return RunState::ShowInventory,
             VirtualKeyCode::D => return RunState::ShowDropItem,
+            // Level changes
+            VirtualKeyCode::Period => {
+                if try_next_level(&mut gs.ecs) {
+                    return RunState::NextLevel;
+                }
+            }
             _ => return RunState::AwaitingInput,
         },
     }
     RunState::PlayerTurn
+}
+
+pub fn try_next_level(ecs: &mut World) -> bool {
+    let player_pos = ecs.fetch::<Point>();
+    let map = ecs.fetch::<Map>();
+    let player_idx = map.xy_idxi32(player_pos.x, player_pos.y);
+    if map.tiles[player_idx] == TileType::DownStairs {
+        true
+    } else {
+        let mut gamelog = ecs.fetch_mut::<GameLog>();
+        gamelog
+            .entries
+            .push("There is no way down from here.".to_string());
+        false
+    }
 }
 
 fn get_item(ecs: &mut World) {
