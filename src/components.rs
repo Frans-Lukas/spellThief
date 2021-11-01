@@ -89,7 +89,7 @@ pub struct WantsToUseItem {
     pub target: Option<rltk::Point>,
 }
 
-#[derive(Component, ConvertSaveload, Debug, Clone)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct AreaOfEffect {
     pub radius: i32,
 }

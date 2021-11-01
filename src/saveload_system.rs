@@ -1,15 +1,13 @@
-use std::fs;
-use std::fs::File;
-use std::path::Path;
-
+use super::components::*;
+use super::MAP_COUNT;
 use specs::error::NoError;
 use specs::prelude::*;
 use specs::saveload::{
     DeserializeComponents, MarkedBuilder, SerializeComponents, SimpleMarker, SimpleMarkerAllocator,
 };
-
-use super::components::*;
-use super::MAP_COUNT;
+use std::fs;
+use std::fs::File;
+use std::path::Path;
 
 macro_rules! deserialize_individually {
     ($ecs:expr, $de:expr, $data:expr, $( $type:ty),*) => {
@@ -42,11 +40,6 @@ macro_rules! serialize_individually {
 
 pub fn does_save_exist() -> bool {
     Path::new("./savegame.json").exists()
-}
-pub fn delete_save() {
-    if Path::new("./savegame.json").exists() {
-        std::fs::remove_file("./savegame.json").expect("Unable to delete file");
-    }
 }
 
 pub fn save_game(ecs: &mut World) {
@@ -148,12 +141,12 @@ pub fn load_game(ecs: &mut World) {
             Consumable,
             Ranged,
             InflictsDamage,
+            MagicStats,
             AreaOfEffect,
             Confusion,
             ProvidesHealing,
             InBackpack,
             WantsToPickupItem,
-            Potion,
             WantsToUseItem,
             WantsToDropItem,
             SerializationHelper,
@@ -188,4 +181,10 @@ pub fn load_game(ecs: &mut World) {
     }
     ecs.delete_entity(deleteme.unwrap())
         .expect("Unable to delete helper");
+}
+
+pub fn delete_save() {
+    if Path::new("./savegame.json").exists() {
+        std::fs::remove_file("./savegame.json").expect("Unable to delete file");
+    }
 }

@@ -2,12 +2,10 @@ extern crate rltk;
 extern crate serde;
 extern crate specs;
 
-use rltk::{GameState, Point, Rltk};
-use specs::prelude::*;
-
 pub use components::*;
 use damage_system::DamageSystem;
 use gamelog::GameLog;
+use gui::MainMenuSelection;
 use inventory_system::{ItemCollectionSystem, ItemDropSystem, ItemRemoveSystem, ItemUseSystem};
 pub use map::*;
 use map_indexing_system::MapIndexingSystem;
@@ -15,9 +13,10 @@ use melee_combat_system::MeleeCombatSystem;
 use monster_ai_systems::MonsterAI;
 use player::*;
 pub use rect::Rect;
+use rltk::{GameState, Point, Rltk};
+use specs::prelude::*;
+use specs::saveload::{SimpleMarker, SimpleMarkerAllocator};
 pub use visibility_system::*;
-use specs::saveload::{SimpleMarkerAllocator, SimpleMarker};
-use gui::MainMenuSelection;
 
 mod components;
 mod damage_system;
@@ -87,8 +86,9 @@ fn main() -> rltk::BError {
     context.with_post_scanlines(true);
 
     let mut gs = State { ecs: World::new() };
-    gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
+
     register_components(&mut gs);
+    gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     let map = Map::new_map_rooms_and_corridors(1);
     let (player_x, player_y) = map.rooms[0].center();
@@ -101,7 +101,9 @@ fn main() -> rltk::BError {
     }
     gs.ecs.insert(Point::new(player_x, player_y));
     gs.ecs.insert(map);
-    gs.ecs.insert(RunState::MainMenu{ menu_selection: MainMenuSelection::NewGame });
+    gs.ecs.insert(RunState::MainMenu {
+        menu_selection: MainMenuSelection::NewGame,
+    });
     gs.ecs.insert(player_entity);
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     gs.ecs.insert(GameLog {
@@ -217,7 +219,6 @@ impl GameState for State {
                 {
                     let aoe = self.ecs.read_storage::<AreaOfEffect>();
                     let is_aoe = aoe.get(item);
-                    //if let Some(is_item_ranged) = is_item_ranged {
                     if let Some(is_aoe) = is_aoe {
                         radius = is_aoe.radius;
                     }
