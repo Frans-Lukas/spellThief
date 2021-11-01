@@ -3,12 +3,7 @@ extern crate serde;
 extern crate specs;
 
 use rltk::{GameState, Point, Rltk};
-use serde::{Deserialize, Serialize};
 use specs::prelude::*;
-use specs::{
-    prelude::*,
-    saveload::{ConvertSaveload, Marker},
-};
 
 pub use components::*;
 use damage_system::DamageSystem;
@@ -507,4 +502,5 @@ fn register_components(gs: &mut State) {
     gs.ecs.register::<DefenseBonus>();
     gs.ecs.register::<WantsToRemoveItem>();
     gs.ecs.register::<SimpleMarker<SerializeMe>>();
+    gs.ecs.register::<SerializationHelper>();
 }

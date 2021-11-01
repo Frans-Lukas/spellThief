@@ -6,13 +6,13 @@ use specs::saveload::{ConvertSaveload, Marker};
 
 use specs_derive::*;
 
-#[derive(Component, ConvertSaveload)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct Position {
     pub x: i32,
     pub y: i32,
 }
 
-#[derive(Component, ConvertSaveload)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct Renderable {
     pub glyph: rltk::FontCharType,
     pub fg: RGB,
@@ -41,7 +41,7 @@ pub struct Name {
 #[derive(Component, Serialize, Deserialize, Debug, Clone)]
 pub struct BlocksTile {}
 
-#[derive(Component, Debug, ConvertSaveload)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct CombatStats {
     pub max_hp: i32,
     pub hp: i32,
@@ -49,18 +49,18 @@ pub struct CombatStats {
     pub power: i32,
 }
 
-#[derive(Component, Debug, ConvertSaveload)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct MagicStats {
     pub max_mana: i32,
     pub mana: i32,
 }
 
-#[derive(Component, Debug, ConvertSaveload)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct Ranged {
     pub range: i32,
 }
 
-#[derive(Component, Debug, ConvertSaveload)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct InflictsDamage {
     pub damage: i32,
 }
@@ -78,7 +78,7 @@ pub struct SufferDamage {
 #[derive(Component, Serialize, Deserialize, Debug, Clone)]
 pub struct Item {}
 
-#[derive(Component, ConvertSaveload, Debug)]
+#[derive(Component, ConvertSaveload, Debug, Clone)]
 pub struct Potion {
     pub heal_amount: i32,
 }
@@ -89,7 +89,7 @@ pub struct WantsToUseItem {
     pub target: Option<rltk::Point>,
 }
 
-#[derive(Component, ConvertSaveload, Debug)]
+#[derive(Component, ConvertSaveload, Debug, Clone)]
 pub struct AreaOfEffect {
     pub radius: i32,
 }
@@ -100,7 +100,7 @@ pub struct CanTargetAnything {}
 #[derive(Component, Serialize, Deserialize, Debug, Clone)]
 pub struct DestroysWalls {}
 
-#[derive(Component, ConvertSaveload, Debug)]
+#[derive(Component, ConvertSaveload, Debug, Clone)]
 pub struct Confusion {
     pub duration: i32,
 }
@@ -123,7 +123,7 @@ pub struct WantsToDropItem {
 #[derive(Component, Serialize, Deserialize, Debug, Clone)]
 pub struct Consumable {}
 
-#[derive(Component, ConvertSaveload, Debug)]
+#[derive(Component, ConvertSaveload, Debug, Clone)]
 pub struct ProvidesHealing {
     pub healing_amount: i32,
 }

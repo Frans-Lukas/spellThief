@@ -2,7 +2,6 @@ use std::fs;
 use std::fs::File;
 use std::path::Path;
 
-use serde::{Deserialize, Serialize};
 use specs::error::NoError;
 use specs::prelude::*;
 use specs::saveload::{
@@ -10,14 +9,14 @@ use specs::saveload::{
 };
 
 use super::components::*;
-use super::{MAP_COUNT, WORLD_SIZE};
+use super::MAP_COUNT;
 
 macro_rules! deserialize_individually {
     ($ecs:expr, $de:expr, $data:expr, $( $type:ty),*) => {
         $(
         DeserializeComponents::<NoError, _>::deserialize(
             &mut ( &mut $ecs.write_storage::<$type>(), ),
-            &mut $data.0, // entities
+            &$data.0, // entities
             &mut $data.1, // marker
             &mut $data.2, // allocater
             &mut $de,
@@ -86,6 +85,7 @@ pub fn save_game(ecs: &mut World) {
             Consumable,
             Ranged,
             InflictsDamage,
+            MagicStats,
             AreaOfEffect,
             Confusion,
             ProvidesHealing,
@@ -153,9 +153,17 @@ pub fn load_game(ecs: &mut World) {
             ProvidesHealing,
             InBackpack,
             WantsToPickupItem,
+            Potion,
             WantsToUseItem,
             WantsToDropItem,
-            SerializationHelper
+            SerializationHelper,
+            Equippable,
+            DestroysWalls,
+            CanTargetAnything,
+            Equipped,
+            MeleePowerBonus,
+            DefenseBonus,
+            WantsToRemoveItem
         );
     }
 

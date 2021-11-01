@@ -111,7 +111,6 @@ fn monster<S: ToString>(ecs: &mut World, x: i32, y: i32, glyph: rltk::FontCharTy
             bg: RGB::named(rltk::BLACK),
             render_order: 1,
         })
-        .marked::<SimpleMarker<SerializeMe>>()
         .with(Viewshed {
             visible_tiles: Vec::new(),
             range: 8,
@@ -128,6 +127,7 @@ fn monster<S: ToString>(ecs: &mut World, x: i32, y: i32, glyph: rltk::FontCharTy
             defense: 1,
             power: 4,
         })
+        .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
 
@@ -144,9 +144,9 @@ fn health_potion(ecs: &mut World, x: i32, y: i32) {
             name: "Health Potion".to_string(),
         })
         .with(Item {})
-        .marked::<SimpleMarker<SerializeMe>>()
         .with(Consumable {})
         .with(ProvidesHealing { healing_amount: 8 })
+        .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
 
