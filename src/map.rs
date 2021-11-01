@@ -1,30 +1,34 @@
 use std::cmp::{max, min};
 
-use rltk::{Algorithm2D, BaseMap, Point, RandomNumberGenerator, RGB, Rltk};
+use rltk::{Algorithm2D, BaseMap, Point, RandomNumberGenerator, Rltk, RGB};
+use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use {crate::HEIGHT, crate::WIDTH};
 
 use super::Rect;
 
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum TileType {
     Wall,
     Floor,
     DownStairs,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Serialize, Deserialize, Clone)]
 pub struct Map {
     pub tiles: Vec<TileType>,
     pub rooms: Vec<Rect>,
     pub revealed_tiles: Vec<bool>,
     pub visible_tiles: Vec<bool>,
     pub blocked: Vec<bool>,
-    pub tile_content: Vec<Vec<Entity>>,
     pub width: i32,
     pub height: i32,
     pub depth: i32,
+
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    pub tile_content: Vec<Vec<Entity>>,
 }
 
 impl Algorithm2D for Map {

@@ -1,13 +1,18 @@
+use std::collections::HashMap;
+
 use rltk::{RandomNumberGenerator, RGB};
 use specs::prelude::*;
 
 use super::{
-    random_table::RandomTable, AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable,
-    InflictsDamage, Item, MagicStats, Monster, Name, Player, Position,
-    ProvidesHealing, Ranged, Rect, Renderable, Viewshed, DestroysWalls
+    AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DestroysWalls,
+    InflictsDamage, Item, MagicStats, Monster, Name, Player, Position, ProvidesHealing,
+    random_table::RandomTable, Ranged, Rect, Renderable, SerializeMe, Viewshed,
+};
+use super::{
+    {EquipmentSlot, Equippable}, DefenseBonus, MeleePowerBonus,
 };
 use super::{MAX_MONSTERS, WIDTH};
-use std::collections::HashMap;
+use specs::saveload::{SimpleMarker, MarkedBuilder};
 
 /// Spawns the player and returns his/her entity object.
 pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
@@ -41,6 +46,7 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
             defense: 2,
             power: 5,
         })
+        .marked::<SimpleMarker<SerializeMe>>()
         .build()
 }
 
@@ -82,6 +88,8 @@ pub fn spawn_room(ecs: &mut World, room: &Rect, map_depth: i32) {
             "Fireball Scroll" => fireball_scroll(ecs, x, y),
             "Confusion Scroll" => confusion_scroll(ecs, x, y),
             "Magic Missile Scroll" => magic_missile_scroll(ecs, x, y),
+            "Dagger" => dagger(ecs, x, y),
+            "Shield" => shield(ecs, x, y),
             _ => {}
         }
     }
@@ -103,6 +111,7 @@ fn monster<S: ToString>(ecs: &mut World, x: i32, y: i32, glyph: rltk::FontCharTy
             bg: RGB::named(rltk::BLACK),
             render_order: 1,
         })
+        .marked::<SimpleMarker<SerializeMe>>()
         .with(Viewshed {
             visible_tiles: Vec::new(),
             range: 8,
@@ -135,6 +144,7 @@ fn health_potion(ecs: &mut World, x: i32, y: i32) {
             name: "Health Potion".to_string(),
         })
         .with(Item {})
+        .marked::<SimpleMarker<SerializeMe>>()
         .with(Consumable {})
         .with(ProvidesHealing { healing_amount: 8 })
         .build();
@@ -158,6 +168,7 @@ fn fireball_scroll(ecs: &mut World, x: i32, y: i32) {
         .with(InflictsDamage { damage: 20 })
         .with(AreaOfEffect { radius: 3 })
         .with(DestroysWalls {})
+        .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
 
@@ -177,6 +188,7 @@ fn magic_missile_scroll(ecs: &mut World, x: i32, y: i32) {
         .with(Consumable {})
         .with(Ranged { range: 6 })
         .with(InflictsDamage { damage: 8 })
+        .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
 
@@ -196,6 +208,49 @@ fn confusion_scroll(ecs: &mut World, x: i32, y: i32) {
         .with(Consumable {})
         .with(Ranged { range: 6 })
         .with(Confusion { duration: 4 })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+fn dagger(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position { x, y })
+        .with(Renderable {
+            glyph: rltk::to_cp437('/'),
+            fg: RGB::named(rltk::CYAN),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2,
+        })
+        .with(Name {
+            name: "Dagger".to_string(),
+        })
+        .with(MeleePowerBonus { power: 2 })
+        .with(Item {})
+        .with(Equippable {
+            slot: EquipmentSlot::Melee,
+        })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+fn shield(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position { x, y })
+        .with(Renderable {
+            glyph: rltk::to_cp437('('),
+            fg: RGB::named(rltk::CYAN),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2,
+        })
+        .with(Name {
+            name: "Shield".to_string(),
+        })
+        .with(Item {})
+        .with(Equippable {
+            slot: EquipmentSlot::Shield,
+        })
+        .with(DefenseBonus { defense: 2 })
+        .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
 
@@ -207,4 +262,6 @@ fn room_table(depth: i32) -> RandomTable {
         .add("Fireball Scroll", 2 + depth)
         .add("Confusion Scroll", 2 + depth)
         .add("Magic Missile Scroll", 4)
+        .add("Dagger", 3)
+        .add("Shield", 3)
 }

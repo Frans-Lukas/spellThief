@@ -51,6 +51,9 @@ pub(crate) fn player_input(gs: &mut State, ctx: &mut Rltk, world_size: Position)
             VirtualKeyCode::Space => return RunState::PlayerTurn,
             VirtualKeyCode::I => return RunState::ShowInventory,
             VirtualKeyCode::D => return RunState::ShowDropItem,
+            // Save and Quit
+            VirtualKeyCode::Escape => return RunState::SaveGame,
+            VirtualKeyCode::R => return RunState::ShowRemoveItem,
             // Level changes
             VirtualKeyCode::Period => {
                 if try_next_level(&mut gs.ecs) {
