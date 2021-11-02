@@ -6,7 +6,8 @@ use specs::{Entity, Join, World, WorldExt};
 use crate::helpers::points_in_circle;
 
 use super::{
-    CombatStats, Equipped, InBackpack, MagicStats, Map, Player, Position, State, Viewshed, KnownSpells
+    CombatStats, Equipped, InBackpack, KnownSpells, MagicStats, Map, Player, Position, State,
+    Viewshed,
 };
 use super::{GameLog, Name, B_GUI_SIZE, HEIGHT, R_GUI_SIZE, WIDTH, WINDOW_WIDTH};
 
@@ -145,18 +146,13 @@ fn draw_player_stats(ecs: &World, ctx: &mut Rltk) {
         );
         y += y_spacing;
 
-
         let blue = RGB::named(rltk::CYAN);
         let black = RGB::named(rltk::BLACK);
         let known_spells_storage = ecs.read_storage::<KnownSpells>();
-        let known_spells = &known_spells_storage
-            .get(*player_entity)
-            .unwrap()
-            .spells;
+        let known_spells = &known_spells_storage.get(*player_entity).unwrap().spells;
         let mut index = 1;
         for spell in known_spells.iter() {
-            ctx.print_color(
-                WIDTH + x_start, y, blue, black, &format!("^{}", index));
+            ctx.print_color(WIDTH + x_start, y, blue, black, &format!("^{}", index));
             ctx.print_color(
                 WIDTH + x_start + 3,
                 y,
@@ -164,8 +160,8 @@ fn draw_player_stats(ecs: &World, ctx: &mut Rltk) {
                 black,
                 &format!("{} ({}):", spell.display_name, spell.mana_cost),
             );
-            for spell_component in spell.components.iter(){
-                y+=1;
+            for spell_component in spell.components.iter() {
+                y += 1;
                 ctx.print_color(
                     WIDTH + x_start + 1,
                     y,
