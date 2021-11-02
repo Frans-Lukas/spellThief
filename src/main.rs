@@ -34,11 +34,12 @@ mod random_table;
 mod rect;
 mod saveload_system;
 mod spawner;
+mod spells;
 mod visibility_system;
 
 const WINDOW_WIDTH: usize = 80;
 const WINDOW_HEIGHT: usize = 50;
-const R_GUI_SIZE: usize = 14;
+const R_GUI_SIZE: usize = 18;
 const B_GUI_SIZE: usize = 7;
 const WIDTH: usize = WINDOW_WIDTH - R_GUI_SIZE;
 const HEIGHT: usize = WINDOW_HEIGHT - B_GUI_SIZE;
@@ -504,4 +505,5 @@ fn register_components(gs: &mut State) {
     gs.ecs.register::<WantsToRemoveItem>();
     gs.ecs.register::<SimpleMarker<SerializeMe>>();
     gs.ecs.register::<SerializationHelper>();
+    gs.ecs.register::<KnownSpells>();
 }

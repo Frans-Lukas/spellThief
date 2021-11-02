@@ -4,15 +4,16 @@ use rltk::{RandomNumberGenerator, RGB};
 use specs::prelude::*;
 
 use super::{
-    AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DestroysWalls,
-    InflictsDamage, Item, MagicStats, Monster, Name, Player, Position, ProvidesHealing,
-    random_table::RandomTable, Ranged, Rect, Renderable, SerializeMe, Viewshed,
+    random_table::RandomTable, AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable,
+    DestroysWalls, InflictsDamage, Item, KnownSpells, MagicStats, Monster, Name, Player, Position,
+    ProvidesHealing, Ranged, Rect, Renderable, SerializeMe, Viewshed,
 };
 use super::{
-    {EquipmentSlot, Equippable}, DefenseBonus, MeleePowerBonus,
+    DefenseBonus, MeleePowerBonus, {EquipmentSlot, Equippable},
 };
 use super::{MAX_MONSTERS, WIDTH};
-use specs::saveload::{SimpleMarker, MarkedBuilder};
+use specs::saveload::{MarkedBuilder, SimpleMarker};
+use super::spells::fireball;
 
 /// Spawns the player and returns his/her entity object.
 pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
@@ -37,6 +38,7 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
             range: 8,
             dirty: true,
         })
+        .with(KnownSpells { spells: vec![fireball()] })
         .with(Name {
             name: "Player".to_string(),
         })

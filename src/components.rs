@@ -170,6 +170,18 @@ pub struct WantsToRemoveItem {
     pub item: Entity,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct KnownSpell {
+    pub display_name: String,
+    pub mana_cost: i32,
+    pub components: Vec<String>,
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct KnownSpells {
+    pub spells: Vec<KnownSpell>,
+}
+
 impl SufferDamage {
     pub fn new_damage(store: &mut WriteStorage<SufferDamage>, victim: Entity, amount: i32) {
         if let Some(suffering) = store.get_mut(victim) {

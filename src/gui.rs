@@ -1,14 +1,14 @@
 use std::cmp::max;
 
-use rltk::{Point, RGB, Rltk, VirtualKeyCode};
+use rltk::{Point, Rltk, VirtualKeyCode, RGB};
 use specs::{Entity, Join, World, WorldExt};
 
 use crate::helpers::points_in_circle;
 
 use super::{
-    CombatStats, Equipped, InBackpack, MagicStats, Map, Player, Position, State, Viewshed,
+    CombatStats, Equipped, InBackpack, MagicStats, Map, Player, Position, State, Viewshed, KnownSpells
 };
-use super::{B_GUI_SIZE, GameLog, HEIGHT, Name, R_GUI_SIZE, WIDTH, WINDOW_WIDTH};
+use super::{GameLog, Name, B_GUI_SIZE, HEIGHT, R_GUI_SIZE, WIDTH, WINDOW_WIDTH};
 
 pub fn draw_ui(ecs: &World, ctx: &mut Rltk) {
     draw_bottom_ui(ecs, ctx);
@@ -75,60 +75,108 @@ fn draw_player_stats(ecs: &World, ctx: &mut Rltk) {
     let players = ecs.read_storage::<Player>();
     let names = ecs.read_storage::<Name>();
     let map = ecs.fetch::<Map>();
+    let player_entity = ecs.fetch::<Entity>();
 
     let start_value = 1;
     let y_spacing = 2;
     let x_start = 1;
-    for (_player, stats, mstats, name) in (&players, &combat_stats, &magic_stats, &names).join() {
+    let mut y = start_value;
+    for (player, stats, mstats, name) in (&players, &combat_stats, &magic_stats, &names).join() {
         let health = format!("hp:{:02}/{:02}", stats.hp, stats.max_hp);
         let mana = format!("mp:{:02}/{:02}", mstats.mana, mstats.max_mana);
         ctx.print_color(
             WIDTH + x_start,
-            start_value,
+            y,
             RGB::named(rltk::WHEAT),
             RGB::named(rltk::BLACK),
             &name.name,
         );
+        y += y_spacing;
         ctx.print_color(
             WIDTH + x_start,
-            start_value + y_spacing,
+            y,
             RGB::named(rltk::WHEAT),
             RGB::named(rltk::BLACK),
             &health,
         );
+        y += 1;
         ctx.draw_bar_horizontal(
             WIDTH + x_start,
-            start_value + y_spacing + 1,
-            12,
+            y,
+            R_GUI_SIZE - 2,
             stats.hp,
             stats.max_hp,
             RGB::named(rltk::BROWN1),
             RGB::named(rltk::BLACK),
         );
+        y += y_spacing;
         ctx.print_color(
             WIDTH + x_start,
-            start_value + y_spacing * 2 + 1,
+            y,
             RGB::named(rltk::WHEAT),
             RGB::named(rltk::BLACK),
             &mana,
         );
-
+        y += 1;
         ctx.draw_bar_horizontal(
             WIDTH + x_start,
-            start_value + y_spacing * 3,
-            12,
+            y,
+            R_GUI_SIZE - 2,
             mstats.mana,
             mstats.max_mana,
             RGB::named(rltk::BLUE_VIOLET),
             RGB::named(rltk::BLACK),
         );
+        y += y_spacing;
         ctx.print_color(
             WIDTH + x_start,
-            start_value + y_spacing * 4,
+            y,
             RGB::named(rltk::WHEAT),
             RGB::named(rltk::BLACK),
             format!("depth:{}", map.depth),
         );
+        y += y_spacing;
+        ctx.print_color(
+            WIDTH + x_start,
+            y,
+            RGB::named(rltk::WHEAT),
+            RGB::named(rltk::BLACK),
+            format!("spells:"),
+        );
+        y += y_spacing;
+
+
+        let blue = RGB::named(rltk::CYAN);
+        let black = RGB::named(rltk::BLACK);
+        let known_spells_storage = ecs.read_storage::<KnownSpells>();
+        let known_spells = &known_spells_storage
+            .get(*player_entity)
+            .unwrap()
+            .spells;
+        let mut index = 1;
+        for spell in known_spells.iter() {
+            ctx.print_color(
+                WIDTH + x_start, y, blue, black, &format!("^{}", index));
+            ctx.print_color(
+                WIDTH + x_start + 3,
+                y,
+                blue,
+                black,
+                &format!("{} ({}):", spell.display_name, spell.mana_cost),
+            );
+            for spell_component in spell.components.iter(){
+                y+=1;
+                ctx.print_color(
+                    WIDTH + x_start + 1,
+                    y,
+                    blue,
+                    black,
+                    &format!("{}", spell_component),
+                );
+            }
+            y += y_spacing;
+            index += 1;
+        }
     }
 }
 
@@ -560,23 +608,53 @@ pub fn remove_item_menu(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Opti
 }
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum GameOverResult { NoSelection, QuitToMenu }
+pub enum GameOverResult {
+    NoSelection,
+    QuitToMenu,
+}
 
-pub fn game_over(ctx : &mut Rltk) -> GameOverResult {
-    ctx.print_color_centered(15, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Your journey has ended!");
-    ctx.print_color_centered(17, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "One day, we'll tell you all about how you did.");
-    ctx.print_color_centered(18, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "That day, sadly, is not in this chapter..");
+pub fn game_over(ctx: &mut Rltk) -> GameOverResult {
+    ctx.print_color_centered(
+        15,
+        RGB::named(rltk::YELLOW),
+        RGB::named(rltk::BLACK),
+        "Your journey has ended!",
+    );
+    ctx.print_color_centered(
+        17,
+        RGB::named(rltk::WHITE),
+        RGB::named(rltk::BLACK),
+        "One day, we'll tell you all about how you did.",
+    );
+    ctx.print_color_centered(
+        18,
+        RGB::named(rltk::WHITE),
+        RGB::named(rltk::BLACK),
+        "That day, sadly, is not in this chapter..",
+    );
 
-    ctx.print_color_centered(20, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Press any key to return to the menu.");
+    ctx.print_color_centered(
+        20,
+        RGB::named(rltk::MAGENTA),
+        RGB::named(rltk::BLACK),
+        "Press any key to return to the menu.",
+    );
 
     match ctx.key {
         None => GameOverResult::NoSelection,
-        Some(_) => GameOverResult::QuitToMenu
+        Some(_) => GameOverResult::QuitToMenu,
     }
 }
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum MainMenuSelection { NewGame, LoadGame, Quit }
+pub enum MainMenuSelection {
+    NewGame,
+    LoadGame,
+    Quit,
+}
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum MainMenuResult { NoSelection{ selected : MainMenuSelection }, Selected{ selected: MainMenuSelection } }
+pub enum MainMenuResult {
+    NoSelection { selected: MainMenuSelection },
+    Selected { selected: MainMenuSelection },
+}
