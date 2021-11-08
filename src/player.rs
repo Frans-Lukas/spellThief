@@ -4,8 +4,8 @@ use rltk::{Point, Rltk, VirtualKeyCode};
 use specs::prelude::*;
 
 use super::{
-    CombatStats, GameLog, Item, KnownSpells, Map, Player, Position, RunState, Spell, State,
-    TileType, Viewshed, WantsToMelee, WantsToPickupItem,
+    CombatStats, GameLog, Item, KnownSpells, MagicStats, Map, Player, Position, RunState, Spell,
+    State, TileType, Viewshed, WantsToMelee, WantsToPickupItem,
 };
 
 pub(crate) fn player_input(gs: &mut State, ctx: &mut Rltk, world_size: Position) -> RunState {
@@ -51,11 +51,16 @@ pub(crate) fn player_input(gs: &mut State, ctx: &mut Rltk, world_size: Position)
                     let players = gs.ecs.read_storage::<Player>();
                     let known_spells = gs.ecs.read_storage::<KnownSpells>();
                     let spells = gs.ecs.read_storage::<Spell>();
+                    let magic_stats = gs.ecs.read_storage::<MagicStats>();
                     let entities = gs.ecs.entities();
-                    for (_player, known_spells) in (&players, &known_spells).join() {
+                    for (_player, known_spells, magic_stats) in
+                        (&players, &known_spells, &magic_stats).join()
+                    {
                         for known_spell in known_spells.spells.iter() {
                             for (entity, spell) in (&entities, &spells).join() {
-                                if spell.name == known_spell.name {
+                                if spell.name == known_spell.name
+                                    && spell.mana_cost <= magic_stats.mana
+                                {
                                     return RunState::ShowTargeting {
                                         range: spell.range,
                                         targetable: entity,

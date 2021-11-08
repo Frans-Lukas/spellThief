@@ -174,7 +174,6 @@ pub struct WantsToRemoveItem {
 pub struct KnownSpell {
     pub name: String,
     pub components: Vec<String>,
-    pub mana_cost: i32
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -182,10 +181,11 @@ pub struct ProvidesSpellComponent<T: Component> {
     pub component: T,
 }
 
-#[derive(Component, Serialize, Deserialize, Debug, Clone)]
+#[derive(Component, ConvertSaveload, Debug, Clone)]
 pub struct Spell {
     pub name: String,
-    pub range: i32
+    pub range: i32,
+    pub mana_cost: i32,
 }
 
 #[derive(Component, ConvertSaveload, Clone)]

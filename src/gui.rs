@@ -153,13 +153,13 @@ fn draw_player_stats(ecs: &World, ctx: &mut Rltk) {
         let mut index = 1;
         for spell in known_spells.iter() {
             ctx.print_color(WIDTH + x_start, y, blue, black, &format!("^{}", index));
-            ctx.print_color(
-                WIDTH + x_start + 3,
-                y,
-                blue,
-                black,
-                &format!("{} ({}):", spell.name, spell.mana_cost),
-            );
+            // ctx.print_color(
+            //     WIDTH + x_start + 3,
+            //     y,
+            //     blue,
+            //     black,
+            //     &format!("{} ({}):", spell.name, spell.mana_cost),
+            // );
             for spell_component in spell.components.iter() {
                 y += 1;
                 ctx.print_color(

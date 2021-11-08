@@ -4,7 +4,7 @@ use super::{
     gamelog::GameLog, helpers::points_in_circle, AreaOfEffect, CombatStats, Confusion, Consumable,
     DestroysWalls, Equippable, Equipped, InBackpack, InflictsDamage, Map, Name, Position,
     ProvidesHealing, SufferDamage, TileType, WantsToDropItem, WantsToPickupItem, WantsToRemoveItem,
-    WantsToUseItem, Spell
+    WantsToUseItem, Spell, MagicStats
 };
 
 pub struct ItemCollectionSystem {}
@@ -70,6 +70,7 @@ impl<'a> System<'a> for ItemUseSystem {
         WriteStorage<'a, Equipped>,
         WriteStorage<'a, InBackpack>,
         ReadStorage<'a, Spell>,
+        WriteStorage<'a, MagicStats>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -91,7 +92,8 @@ impl<'a> System<'a> for ItemUseSystem {
             equippable,
             mut equipped,
             mut backpack,
-            spells
+            spells,
+            mut magic_stats,
         ) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
@@ -156,9 +158,18 @@ impl<'a> System<'a> for ItemUseSystem {
             }
             // if it is spell reduce mana
             let spell = spells.get(useitem.item);
-            match spell {
-                None => {}
-                Some(spell) => {
+            for (player, mut magic_stats) in (&entities, &mut magic_stats).join() {
+                match spell {
+                    None => {}
+                    Some(spell) => {
+
+                        gamelog.entries.push(format!(
+                            "You cast {}, costing {} mana.",
+                            spell.name,
+                            spell.mana_cost
+                        ));
+                        magic_stats.mana -= spell.mana_cost;
+                    }
                 }
             }
 
@@ -191,14 +202,14 @@ impl<'a> System<'a> for ItemUseSystem {
                 Some(damage) => {
                     for mob in targets.iter() {
                         SufferDamage::new_damage(&mut suffer_damage, *mob, damage.damage);
-                        if entity == *player_entity {
-                            let mob_name = names.get(*mob).unwrap();
-                            let item_name = names.get(useitem.item).unwrap();
-                            gamelog.entries.push(format!(
-                                "You use {} on {}, inflicting {} hp.",
-                                item_name.name, mob_name.name, damage.damage
-                            ));
-                        }
+                        // if entity == *player_entity {
+                        //     let mob_name = names.get(*mob).unwrap();
+                        //     let item_name = names.get(useitem.item).unwrap();
+                        //     gamelog.entries.push(format!(
+                        //         "You use {} on {}, inflicting {} hp.",
+                        //         item_name.name, mob_name.name, damage.damage
+                        //     ));
+                        // }
 
                         used_item = true;
                     }

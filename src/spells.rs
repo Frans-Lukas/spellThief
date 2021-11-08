@@ -15,12 +15,12 @@ pub fn fireball(ecs: &mut World) -> KnownSpell {
         .with(Spell {
             name: "fireball".to_string(),
             range: 6,
+            mana_cost: 1,
         })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
     KnownSpell {
         name: "fireball".to_string(),
-        mana_cost: 1,
         components: vec![
             "ranged".to_string(),
             "deals damage".to_string(),
