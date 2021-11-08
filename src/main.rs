@@ -67,7 +67,7 @@ pub enum RunState {
     ShowDropItem,
     ShowTargeting {
         range: i32,
-        item: Entity,
+        targetable: Entity,
     },
     NextLevel,
     ShowRemoveItem,
@@ -178,7 +178,7 @@ impl GameState for State {
                         if let Some(is_item_ranged) = is_item_ranged {
                             newrunstate = RunState::ShowTargeting {
                                 range: is_item_ranged.range,
-                                item: item_entity,
+                                targetable: item_entity,
                             };
                         } else {
                             let mut intent = self.ecs.write_storage::<WantsToUseItem>();
@@ -214,7 +214,7 @@ impl GameState for State {
                     }
                 }
             }
-            RunState::ShowTargeting { range, item } => {
+            RunState::ShowTargeting { range, targetable: item } => {
                 let mut radius = 1;
 
                 {
@@ -506,4 +506,5 @@ fn register_components(gs: &mut State) {
     gs.ecs.register::<SimpleMarker<SerializeMe>>();
     gs.ecs.register::<SerializationHelper>();
     gs.ecs.register::<KnownSpells>();
+    gs.ecs.register::<Spell>();
 }

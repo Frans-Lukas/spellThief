@@ -3,20 +3,25 @@ use std::collections::HashMap;
 use rltk::{RandomNumberGenerator, RGB};
 use specs::prelude::*;
 
+use super::spells::fireball;
 use super::{
     random_table::RandomTable, AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable,
     DestroysWalls, InflictsDamage, Item, KnownSpells, MagicStats, Monster, Name, Player, Position,
-    ProvidesHealing, Ranged, Rect, Renderable, SerializeMe, Viewshed,
+    ProvidesHealing, Ranged, Rect, Renderable, SerializeMe, Viewshed,KnownSpell
 };
 use super::{
     DefenseBonus, MeleePowerBonus, {EquipmentSlot, Equippable},
 };
 use super::{MAX_MONSTERS, WIDTH};
 use specs::saveload::{MarkedBuilder, SimpleMarker};
-use super::spells::fireball;
+use std::borrow::BorrowMut;
 
 /// Spawns the player and returns his/her entity object.
 pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
+    let fireball_known_spell: KnownSpell;
+    {
+        fireball_known_spell = fireball(ecs);
+    }
     ecs.create_entity()
         .with(Position {
             x: player_x,
@@ -38,7 +43,9 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
             range: 8,
             dirty: true,
         })
-        .with(KnownSpells { spells: vec![fireball()] })
+        .with(KnownSpells {
+            spells: vec![fireball_known_spell],
+        })
         .with(Name {
             name: "Player".to_string(),
         })

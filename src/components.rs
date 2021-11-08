@@ -175,13 +175,17 @@ pub struct KnownSpell {
     pub display_name: String,
     pub mana_cost: i32,
     pub components: Vec<String>,
-    pub spell: Entity,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ProvidesSpellComponent<T: Component> {
+    pub component: T,
+}
 
 #[derive(Component, Serialize, Deserialize, Debug, Clone)]
-pub struct Spell {}
-
+pub struct Spell {
+    pub name: String
+}
 
 #[derive(Component, ConvertSaveload, Clone)]
 pub struct Bounces {

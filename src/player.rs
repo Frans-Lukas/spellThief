@@ -4,8 +4,8 @@ use rltk::{Point, Rltk, VirtualKeyCode};
 use specs::prelude::*;
 
 use super::{
-    CombatStats, GameLog, Item, Map, Player, Position, RunState, State, TileType, Viewshed,
-    WantsToMelee, WantsToPickupItem,
+    CombatStats, GameLog, Item, KnownSpells, Map, Player, Position, RunState, State, TileType,
+    Viewshed, WantsToMelee, WantsToPickupItem,
 };
 
 pub(crate) fn player_input(gs: &mut State, ctx: &mut Rltk, world_size: Position) -> RunState {
@@ -46,6 +46,16 @@ pub(crate) fn player_input(gs: &mut State, ctx: &mut Rltk, world_size: Position)
                 try_move_player(-1, 1, &mut gs.ecs, world_size)
             }
 
+            VirtualKeyCode::Key1 => {
+                if has_spell_in_slot(&mut gs.ecs, 1) {
+                    let (range, spell) = get_spell_in_slot(&mut gs.ecs, 1);
+                    return RunState::ShowTargeting {
+                        range,
+                        targetable: spell,
+                    };
+                }
+            }
+
             VirtualKeyCode::G => get_item(&mut gs.ecs),
             VirtualKeyCode::Numpad5 => return RunState::PlayerTurn,
             VirtualKeyCode::Space => return RunState::PlayerTurn,
@@ -64,6 +74,19 @@ pub(crate) fn player_input(gs: &mut State, ctx: &mut Rltk, world_size: Position)
         },
     }
     RunState::PlayerTurn
+}
+
+fn has_spell_in_slot(ecs: &mut World, slot: i32) -> bool {
+    let players = ecs.read_storage::<Player>();
+    let known_spells = ecs.read_storage::<KnownSpells>();
+    for (_player, known_spells) in (&players, &known_spells).join() {
+        return known_spells.spells.len() >= slot as usize;
+    }
+    return false;
+}
+
+fn get_spell_in_slot(ecs: &mut World, slot: i32) -> (i32, Entity) {
+    unimplemented!()
 }
 
 pub fn try_next_level(ecs: &mut World) -> bool {

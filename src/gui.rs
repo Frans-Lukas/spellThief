@@ -470,6 +470,7 @@ pub fn ranged_target(
     // Highlight available target cells
     let mut available_cells = Vec::new();
     let visible = viewsheds.get(*player_entity);
+
     if let Some(visible) = visible {
         // We have a viewshed
         for idx in visible.visible_tiles.iter() {
