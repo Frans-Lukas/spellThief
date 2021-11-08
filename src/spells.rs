@@ -3,23 +3,28 @@ use specs::{Builder, Entity, World, WorldExt};
 
 use super::KnownSpell;
 use super::{
-    AreaOfEffect, Bounces, InflictsDamage, Pierces, Ranged, RecastOnKill, SerializeMe, Spell,
+    AreaOfEffect, Bounces, DestroysWalls, InflictsDamage, Pierces, Ranged, RecastOnKill,
+    SerializeMe, Spell,
 };
 
 pub fn fireball(ecs: &mut World) -> KnownSpell {
     ecs.create_entity()
-        .with(Ranged { range: 6 })
         .with(InflictsDamage { damage: 20 })
         .with(AreaOfEffect { radius: 3 })
-        .with(Spell { name: "fireball".to_string() })
+        .with(DestroysWalls {})
+        .with(Spell {
+            name: "fireball".to_string(),
+            range: 6,
+        })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
     KnownSpell {
-        display_name: "fireball".to_string(),
+        name: "fireball".to_string(),
         mana_cost: 1,
         components: vec![
             "ranged".to_string(),
             "deals damage".to_string(),
+            "destroys walls".to_string(),
             "area of effect".to_string(),
         ],
     }

@@ -4,7 +4,7 @@ use super::{
     gamelog::GameLog, helpers::points_in_circle, AreaOfEffect, CombatStats, Confusion, Consumable,
     DestroysWalls, Equippable, Equipped, InBackpack, InflictsDamage, Map, Name, Position,
     ProvidesHealing, SufferDamage, TileType, WantsToDropItem, WantsToPickupItem, WantsToRemoveItem,
-    WantsToUseItem,
+    WantsToUseItem, Spell
 };
 
 pub struct ItemCollectionSystem {}
@@ -69,6 +69,7 @@ impl<'a> System<'a> for ItemUseSystem {
         ReadStorage<'a, Equippable>,
         WriteStorage<'a, Equipped>,
         WriteStorage<'a, InBackpack>,
+        ReadStorage<'a, Spell>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -90,6 +91,7 @@ impl<'a> System<'a> for ItemUseSystem {
             equippable,
             mut equipped,
             mut backpack,
+            spells
         ) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
@@ -150,6 +152,13 @@ impl<'a> System<'a> for ItemUseSystem {
                             TileType::DownStairs => {}
                         }
                     }
+                }
+            }
+            // if it is spell reduce mana
+            let spell = spells.get(useitem.item);
+            match spell {
+                None => {}
+                Some(spell) => {
                 }
             }
 

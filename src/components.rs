@@ -172,9 +172,9 @@ pub struct WantsToRemoveItem {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct KnownSpell {
-    pub display_name: String,
-    pub mana_cost: i32,
+    pub name: String,
     pub components: Vec<String>,
+    pub mana_cost: i32
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -184,7 +184,8 @@ pub struct ProvidesSpellComponent<T: Component> {
 
 #[derive(Component, Serialize, Deserialize, Debug, Clone)]
 pub struct Spell {
-    pub name: String
+    pub name: String,
+    pub range: i32
 }
 
 #[derive(Component, ConvertSaveload, Clone)]

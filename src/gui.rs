@@ -158,7 +158,7 @@ fn draw_player_stats(ecs: &World, ctx: &mut Rltk) {
                 y,
                 blue,
                 black,
-                &format!("{} ({}):", spell.display_name, spell.mana_cost),
+                &format!("{} ({}):", spell.name, spell.mana_cost),
             );
             for spell_component in spell.components.iter() {
                 y += 1;

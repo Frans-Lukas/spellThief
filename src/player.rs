@@ -4,8 +4,8 @@ use rltk::{Point, Rltk, VirtualKeyCode};
 use specs::prelude::*;
 
 use super::{
-    CombatStats, GameLog, Item, KnownSpells, Map, Player, Position, RunState, State, TileType,
-    Viewshed, WantsToMelee, WantsToPickupItem,
+    CombatStats, GameLog, Item, KnownSpells, Map, Player, Position, RunState, Spell, State,
+    TileType, Viewshed, WantsToMelee, WantsToPickupItem,
 };
 
 pub(crate) fn player_input(gs: &mut State, ctx: &mut Rltk, world_size: Position) -> RunState {
@@ -48,11 +48,22 @@ pub(crate) fn player_input(gs: &mut State, ctx: &mut Rltk, world_size: Position)
 
             VirtualKeyCode::Key1 => {
                 if has_spell_in_slot(&mut gs.ecs, 1) {
-                    let (range, spell) = get_spell_in_slot(&mut gs.ecs, 1);
-                    return RunState::ShowTargeting {
-                        range,
-                        targetable: spell,
-                    };
+                    let players = gs.ecs.read_storage::<Player>();
+                    let known_spells = gs.ecs.read_storage::<KnownSpells>();
+                    let spells = gs.ecs.read_storage::<Spell>();
+                    let entities = gs.ecs.entities();
+                    for (_player, known_spells) in (&players, &known_spells).join() {
+                        for known_spell in known_spells.spells.iter() {
+                            for (entity, spell) in (&entities, &spells).join() {
+                                if spell.name == known_spell.name {
+                                    return RunState::ShowTargeting {
+                                        range: spell.range,
+                                        targetable: entity,
+                                    };
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -83,10 +94,6 @@ fn has_spell_in_slot(ecs: &mut World, slot: i32) -> bool {
         return known_spells.spells.len() >= slot as usize;
     }
     return false;
-}
-
-fn get_spell_in_slot(ecs: &mut World, slot: i32) -> (i32, Entity) {
-    unimplemented!()
 }
 
 pub fn try_next_level(ecs: &mut World) -> bool {
