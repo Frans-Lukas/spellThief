@@ -7,6 +7,7 @@ use specs::prelude::*;
 use {crate::HEIGHT, crate::WIDTH};
 
 use super::Rect;
+use std::collections::HashSet;
 
 #[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum TileType {
@@ -25,6 +26,7 @@ pub struct Map {
     pub width: i32,
     pub height: i32,
     pub depth: i32,
+    pub bloodstains : HashSet<usize>,
 
     #[serde(skip_serializing)]
     #[serde(skip_deserializing)]
@@ -96,6 +98,7 @@ pub fn draw_map(ecs: &World, ctx: &mut Rltk) {
         if map.revealed_tiles[idx] {
             let glyph;
             let mut fg;
+            let mut bg = RGB::from_f32(0., 0., 0.);
             match tile {
                 TileType::Floor => {
                     glyph = rltk::to_cp437('.');
@@ -110,10 +113,12 @@ pub fn draw_map(ecs: &World, ctx: &mut Rltk) {
                     fg = RGB::from_f32(0., 1.0, 1.0);
                 }
             }
+            if map.bloodstains.contains(&idx) { bg = RGB::from_f32(0.75, 0., 0.); }
             if !map.visible_tiles[idx] {
-                fg = fg.to_greyscale()
+                fg = fg.to_greyscale();
+                bg = RGB::from_f32(0., 0., 0.); // Don't show stains out of visual range
             }
-            ctx.set(x, y, fg, RGB::from_f32(0., 0., 0.), glyph);
+            ctx.set(x, y, fg, bg, glyph);
         }
 
         x += 1;
@@ -293,6 +298,7 @@ impl Map {
             tile_content: vec![Vec::new(); HEIGHT * WIDTH],
             width: WIDTH as i32,
             height: HEIGHT as i32,
+            bloodstains: HashSet::new(),
             depth,
         }
     }
