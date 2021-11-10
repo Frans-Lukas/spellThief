@@ -3,9 +3,21 @@ use specs::{Builder, Entity, World, WorldExt};
 
 use super::KnownSpell;
 use super::{
-    AreaOfEffect, Bounces, DestroysWalls, InflictsDamage, Pierces, Ranged, RecastOnKill,
+    AreaOfEffect, Bounces, DestroysWalls, InflictsDamage, Name, Pierces, Ranged, RecastOnKill,
     SerializeMe, Spell,
 };
+use std::borrow::BorrowMut;
+
+pub enum SpellComponent {
+    SCInflictsDamage { damage: i32 },
+    AreaOfEffect { range: i32 },
+    DestroysWalls,
+    Pierces,
+    RecastsOnKill,
+}
+
+pub fn add_spell_component(ecs: &mut World, spell_entity: &mut Entity, spell_component: SpellComponent) {
+}
 
 pub fn fireball(ecs: &mut World) -> KnownSpell {
     ecs.create_entity()
@@ -16,6 +28,9 @@ pub fn fireball(ecs: &mut World) -> KnownSpell {
             name: "fireball".to_string(),
             range: 6,
             mana_cost: 1,
+        })
+        .with(Name {
+            name: "fireball".to_string(),
         })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
@@ -29,6 +44,7 @@ pub fn fireball(ecs: &mut World) -> KnownSpell {
         ],
     }
 }
+
 //
 // pub fn icicle(ecs: &mut World) -> KnownSpell {
 //     let spell_entity = ecs
