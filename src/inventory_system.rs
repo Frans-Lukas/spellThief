@@ -1,10 +1,10 @@
 use specs::prelude::*;
 
 use super::{
-    gamelog::GameLog, helpers::points_in_circle, AreaOfEffect, CombatStats, Confusion, Consumable,
-    DestroysWalls, Equippable, Equipped, InBackpack, InflictsDamage, Map, Name, Position,
-    ProvidesHealing, SufferDamage, TileType, WantsToDropItem, WantsToPickupItem, WantsToRemoveItem,
-    WantsToUseItem, Spell, MagicStats
+    gamelog::GameLog, helpers::points_in_circle, particle_system::ParticleBuilder, AreaOfEffect,
+    CombatStats, Confusion, Consumable, DestroysWalls, Equippable, Equipped, InBackpack,
+    InflictsDamage, MagicStats, Map, Name, Position, ProvidesHealing, Spell, SufferDamage,
+    TileType, WantsToDropItem, WantsToPickupItem, WantsToRemoveItem, WantsToUseItem,
 };
 
 pub struct ItemCollectionSystem {}
@@ -71,8 +71,11 @@ impl<'a> System<'a> for ItemUseSystem {
         WriteStorage<'a, InBackpack>,
         ReadStorage<'a, Spell>,
         WriteStorage<'a, MagicStats>,
+        WriteExpect<'a, ParticleBuilder>,
+        ReadStorage<'a, Position>,
     );
 
+    #[allow(clippy::cognitive_complexity)]
     fn run(&mut self, data: Self::SystemData) {
         let (
             player_entity,
@@ -94,6 +97,8 @@ impl<'a> System<'a> for ItemUseSystem {
             mut backpack,
             spells,
             mut magic_stats,
+            mut particle_builder,
+            positions,
         ) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
@@ -122,6 +127,14 @@ impl<'a> System<'a> for ItemUseSystem {
                                 let target_points = points_in_circle(target, area_effect.radius);
                                 for point in target_points.iter() {
                                     blast_tiles.push(*point);
+                                    particle_builder.request(
+                                        point.x,
+                                        point.y,
+                                        rltk::RGB::named(rltk::ORANGE),
+                                        rltk::RGB::named(rltk::BLACK),
+                                        rltk::to_cp437('░'),
+                                        200.0,
+                                    );
                                 }
                             }
                             //rltk::field_of_view(target, area_effect.radius, &*map);
@@ -162,11 +175,9 @@ impl<'a> System<'a> for ItemUseSystem {
                 match spell {
                     None => {}
                     Some(spell) => {
-
                         gamelog.entries.push(format!(
                             "You cast {}, costing {} mana.",
-                            spell.name,
-                            spell.mana_cost
+                            spell.name, spell.mana_cost
                         ));
                         magic_stats.mana -= spell.mana_cost;
                     }
@@ -190,6 +201,18 @@ impl<'a> System<'a> for ItemUseSystem {
                                 ));
                             }
                             used_item = true;
+
+                            let pos = positions.get(*target);
+                            if let Some(pos) = pos {
+                                particle_builder.request(
+                                    pos.x,
+                                    pos.y,
+                                    rltk::RGB::named(rltk::GREEN),
+                                    rltk::RGB::named(rltk::BLACK),
+                                    rltk::to_cp437('♥'),
+                                    200.0,
+                                );
+                            }
                         }
                     }
                 }
@@ -212,6 +235,18 @@ impl<'a> System<'a> for ItemUseSystem {
                         }
 
                         used_item = true;
+
+                        let pos = positions.get(*mob);
+                        if let Some(pos) = pos {
+                            particle_builder.request(
+                                pos.x,
+                                pos.y,
+                                rltk::RGB::named(rltk::RED),
+                                rltk::RGB::named(rltk::BLACK),
+                                rltk::to_cp437('‼'),
+                                200.0,
+                            );
+                        }
                     }
                 }
             }

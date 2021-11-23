@@ -94,7 +94,8 @@ pub fn save_game(ecs: &mut World) {
             MeleePowerBonus,
             DefenseBonus,
             WantsToRemoveItem,
-            Spell
+            Spell,
+            ParticleLifetime
         );
     }
 
@@ -158,7 +159,8 @@ pub fn load_game(ecs: &mut World) {
             MeleePowerBonus,
             DefenseBonus,
             WantsToRemoveItem,
-            Spell
+            Spell,
+            ParticleLifetime
         );
     }
 

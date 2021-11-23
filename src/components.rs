@@ -89,6 +89,11 @@ pub struct WantsToUseItem {
     pub target: Option<rltk::Point>,
 }
 
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct ParticleLifetime {
+    pub lifetime_ms: f32,
+}
+
 #[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct AreaOfEffect {
     pub radius: i32,

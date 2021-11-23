@@ -29,6 +29,7 @@ mod map_indexing_system;
 mod melee_combat_system;
 mod menu;
 mod monster_ai_systems;
+mod particle_system;
 mod player;
 mod random_table;
 mod rect;
@@ -105,6 +106,7 @@ fn main() -> rltk::BError {
     gs.ecs.insert(RunState::MainMenu {
         menu_selection: MainMenuSelection::NewGame,
     });
+    gs.ecs.insert(particle_system::ParticleBuilder::new());
     gs.ecs.insert(player_entity);
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     gs.ecs.insert(GameLog {
@@ -116,6 +118,7 @@ fn main() -> rltk::BError {
 impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
         ctx.cls();
+        particle_system::cull_dead_particles(&mut self.ecs, ctx);
 
         draw_map(&self.ecs, ctx);
 
@@ -214,7 +217,10 @@ impl GameState for State {
                     }
                 }
             }
-            RunState::ShowTargeting { range, targetable: item } => {
+            RunState::ShowTargeting {
+                range,
+                targetable: item,
+            } => {
                 let mut radius = 1;
 
                 {
@@ -467,6 +473,8 @@ impl State {
         item_drop_system.run_now(&self.ecs);
         let mut item_remove = ItemRemoveSystem {};
         item_remove.run_now(&self.ecs);
+        let mut particles = particle_system::ParticleSpawnSystem{};
+        particles.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -507,4 +515,5 @@ fn register_components(gs: &mut State) {
     gs.ecs.register::<SerializationHelper>();
     gs.ecs.register::<KnownSpells>();
     gs.ecs.register::<Spell>();
+    gs.ecs.register::<ParticleLifetime>();
 }
