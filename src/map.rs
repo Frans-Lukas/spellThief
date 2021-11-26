@@ -1,12 +1,13 @@
 use std::cmp::{max, min};
 
-use rltk::{Algorithm2D, BaseMap, Point, RandomNumberGenerator, RGB, Rltk};
+use rltk::{Algorithm2D, BaseMap, Point, RandomNumberGenerator, Rltk, RGB};
 use serde::{Deserialize, Serialize};
 use specs::prelude::*;
 
 use {crate::HEIGHT, crate::WIDTH};
 
 use super::Rect;
+use super::MAP_COUNT;
 use std::collections::HashSet;
 
 #[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
@@ -26,7 +27,7 @@ pub struct Map {
     pub width: i32,
     pub height: i32,
     pub depth: i32,
-    pub bloodstains : HashSet<usize>,
+    pub bloodstains: HashSet<usize>,
 
     #[serde(skip_serializing)]
     #[serde(skip_deserializing)]
@@ -113,7 +114,9 @@ pub fn draw_map(ecs: &World, ctx: &mut Rltk) {
                     fg = RGB::from_f32(0., 1.0, 1.0);
                 }
             }
-            if map.bloodstains.contains(&idx) { bg = RGB::from_f32(0.75, 0., 0.); }
+            if map.bloodstains.contains(&idx) {
+                bg = RGB::from_f32(0.75, 0., 0.);
+            }
             if !map.visible_tiles[idx] {
                 fg = fg.to_greyscale();
                 bg = RGB::from_f32(0., 0., 0.); // Don't show stains out of visual range
@@ -192,21 +195,6 @@ impl Map {
         self::Map::xy_idx(self, x as usize, y as usize)
     }
 
-    pub fn populate_blocked(&mut self) {
-        for (i, tile) in self.tiles.iter_mut().enumerate() {
-            self.blocked[i] = *tile == TileType::Wall;
-        }
-    }
-
-    fn apply_room_to_map(&mut self, room: &Rect) {
-        for y in room.y1 + 1..=room.y2 {
-            for x in room.x1 + 1..=room.x2 {
-                let idx = self::Map::xy_idxi32(self, x, y);
-                self.tiles[idx] = TileType::Floor;
-            }
-        }
-    }
-
     fn is_exit_valid(&self, x: i32, y: i32) -> bool {
         if x < 1 || x > self.width - 1 || y < 1 || y > self.height - 1 {
             return false;
@@ -215,71 +203,10 @@ impl Map {
         !self.blocked[idx]
     }
 
-    fn apply_horizontal_tunnel(&mut self, x1: i32, x2: i32, y: i32) {
-        for x in min(x1, x2)..=max(x1, x2) {
-            let idx = self::Map::xy_idxi32(self, x, y);
-            if idx > 0 && idx < self.width as usize * self.height as usize {
-                self.tiles[idx as usize] = TileType::Floor;
-            }
+    pub fn populate_blocked(&mut self) {
+        for (i, tile) in self.tiles.iter_mut().enumerate() {
+            self.blocked[i] = *tile == TileType::Wall;
         }
-    }
-
-    fn apply_vertical_tunnel(&mut self, y1: i32, y2: i32, x: i32) {
-        for y in min(y1, y2)..=max(y1, y2) {
-            let idx = self::Map::xy_idxi32(self, x, y);
-            if idx > 0 && idx < self.width as usize * self.height as usize {
-                self.tiles[idx as usize] = TileType::Floor;
-            }
-        }
-    }
-
-    /// Makes a new map using the algorithm from http://rogueliketutorials.com/tutorials/tcod/part-3/
-    /// This gives a handful of random rooms and corridors joining them together.
-    pub fn new_map_rooms_and_corridors(depth: i32) -> Map {
-        let mut map = Map::new_empty_map(depth);
-
-        const MAX_ROOMS: i32 = 30;
-        const MIN_SIZE: i32 = 6;
-        const MAX_SIZE: i32 = 10;
-
-        let mut rng = RandomNumberGenerator::new();
-
-        for _i in 0..MAX_ROOMS {
-            let w = rng.range(MIN_SIZE, MAX_SIZE);
-            let h = rng.range(MIN_SIZE, MAX_SIZE);
-            let x = rng.roll_dice(1, map.width - w - 1) - 1;
-            let y = rng.roll_dice(1, map.height - h - 1) - 1;
-            let new_room = Rect::new(x, y, w, h);
-            let mut ok = true;
-            for other_room in map.rooms.iter() {
-                if new_room.intersect(other_room) {
-                    ok = false
-                }
-            }
-            if ok {
-                map.apply_room_to_map(&new_room);
-
-                if !map.rooms.is_empty() {
-                    let (new_x, new_y) = new_room.center();
-                    let (prev_x, prev_y) = map.rooms[map.rooms.len() - 1].center();
-                    if rng.range(0, 2) == 1 {
-                        map.apply_horizontal_tunnel(prev_x, new_x, prev_y);
-                        map.apply_vertical_tunnel(prev_y, new_y, new_x);
-                    } else {
-                        map.apply_vertical_tunnel(prev_y, new_y, prev_x);
-                        map.apply_horizontal_tunnel(prev_x, new_x, new_y);
-                    }
-                }
-
-                map.rooms.push(new_room);
-            }
-        }
-
-        let stairs_position = map.rooms[map.rooms.len() - 1].center();
-        let stairs_idx = map.xy_idxi32(stairs_position.0, stairs_position.1);
-        map.tiles[stairs_idx] = TileType::DownStairs;
-
-        map
     }
 
     pub fn clear_content_index(&mut self) {
@@ -287,43 +214,19 @@ impl Map {
             content.clear();
         }
     }
-
-    fn new_empty_map(depth: i32) -> Map {
+    /// Generates an empty map, consisting entirely of solid walls
+    pub fn new(new_depth: i32) -> Map {
         Map {
-            tiles: vec![TileType::Wall; HEIGHT * WIDTH],
+            tiles: vec![TileType::Wall; MAP_COUNT],
             rooms: Vec::new(),
-            revealed_tiles: vec![false; HEIGHT * WIDTH],
-            visible_tiles: vec![false; HEIGHT * WIDTH],
-            blocked: vec![false; HEIGHT * WIDTH],
-            tile_content: vec![Vec::new(); HEIGHT * WIDTH],
             width: WIDTH as i32,
             height: HEIGHT as i32,
+            revealed_tiles: vec![false; MAP_COUNT],
+            visible_tiles: vec![false; MAP_COUNT],
+            blocked: vec![false; MAP_COUNT],
+            tile_content: vec![Vec::new(); MAP_COUNT],
+            depth: new_depth,
             bloodstains: HashSet::new(),
-            depth,
         }
-    }
-
-    pub fn new_rand_map(&mut self, depth: i32) -> Map {
-        let mut map = Map::new_empty_map(depth);
-        for x in 0..WIDTH {
-            map.tiles[self.xy_idx(x, 0)] = TileType::Wall;
-            map.tiles[self.xy_idx(x, HEIGHT - 1)] = TileType::Wall;
-        }
-        for y in 0..HEIGHT {
-            map.tiles[self.xy_idx(0, y)] = TileType::Wall;
-            map.tiles[self.xy_idx(WIDTH - 1, y)] = TileType::Wall;
-        }
-
-        let mut rng = rltk::RandomNumberGenerator::new();
-        for _i in 0..400 {
-            let x = rng.roll_dice(1, 79) as usize;
-            let y = rng.roll_dice(1, 49) as usize;
-            let idx = self.xy_idx(x, y);
-            if idx != self.xy_idx(40, 25) {
-                map.tiles[idx] = TileType::Wall;
-            }
-        }
-
-        map
     }
 }

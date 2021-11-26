@@ -37,6 +37,7 @@ mod saveload_system;
 mod spawner;
 mod spells;
 mod visibility_system;
+pub mod map_builders;
 
 const WINDOW_WIDTH: usize = 80;
 const WINDOW_HEIGHT: usize = 50;
@@ -92,7 +93,7 @@ fn main() -> rltk::BError {
     register_components(&mut gs);
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
-    let map = Map::new_map_rooms_and_corridors(1);
+    let map = map_builders::build_random_map(1);
     let (player_x, player_y) = map.rooms[0].center();
 
     let player_entity = spawner::player(&mut gs.ecs, player_x, player_y);
@@ -331,7 +332,7 @@ impl State {
         let worldmap;
         {
             let mut worldmap_resource = self.ecs.write_resource::<Map>();
-            *worldmap_resource = Map::new_map_rooms_and_corridors(1);
+            *worldmap_resource = map_builders::build_random_map(1);
             worldmap = worldmap_resource.clone();
         }
 
@@ -376,7 +377,7 @@ impl State {
         {
             let mut worldmap_resource = self.ecs.write_resource::<Map>();
             let current_depth = worldmap_resource.depth;
-            *worldmap_resource = Map::new_map_rooms_and_corridors(current_depth + 1);
+            *worldmap_resource = map_builders::build_random_map(current_depth + 1);
             worldmap = worldmap_resource.clone();
         }
 
@@ -473,7 +474,7 @@ impl State {
         item_drop_system.run_now(&self.ecs);
         let mut item_remove = ItemRemoveSystem {};
         item_remove.run_now(&self.ecs);
-        let mut particles = particle_system::ParticleSpawnSystem{};
+        let mut particles = particle_system::ParticleSpawnSystem {};
         particles.run_now(&self.ecs);
         self.ecs.maintain();
     }
